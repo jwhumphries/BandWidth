@@ -20,13 +20,16 @@ func main() {
 }
 
 func newRootCmd() *cobra.Command {
-	initConfig()
 	return &cobra.Command{
 		Use:           "bandwidth",
 		Short:         "Practice tracking for musicians and bands",
 		Version:       version.Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PersistentPreRunE: func(*cobra.Command, []string) error {
+			initConfig()
+			return nil
+		},
 		RunE: func(*cobra.Command, []string) error {
 			return runServer()
 		},
