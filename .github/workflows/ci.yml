@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      DAGGER_NO_NAG: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: "latest"
+          verb: call
+          module: .dagger
+          args: check --source=.
+
+  release:
+    runs-on: ubuntu-latest
+    env:
+      DAGGER_NO_NAG: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Release build
+        uses: dagger/dagger-for-github@v7
+        with:
+          version: "latest"
+          verb: call
+          module: .dagger
+          args: release --source=. --version=${{ github.sha }}
