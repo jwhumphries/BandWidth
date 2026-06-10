@@ -530,13 +530,17 @@ func newLogger(level string) *slog.Logger {
 func requestLogger(logger *slog.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
+			// Snapshot method/path before next: the SPA handler rewrites
+			// req.URL.Path to "/" on fallback.
+			req := c.Request()
+			method := req.Method
+			path := req.URL.Path
 			start := time.Now()
 			err := next(c)
-			req := c.Request()
 			_, status := echo.ResolveResponseStatus(c.Response(), err)
 			logger.Info("request",
-				"method", req.Method,
-				"path", req.URL.Path,
+				"method", method,
+				"path", path,
 				"status", status,
 				"duration", time.Since(start).String(),
 			)
