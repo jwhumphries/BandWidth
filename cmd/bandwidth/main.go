@@ -41,6 +41,7 @@ func newRootCmd() *cobra.Command {
 func initConfig() {
 	viper.SetDefault("port", ":8080")
 	viper.SetDefault("log_level", "info")
+	viper.SetDefault("db_path", "data/bandwidth.db")
 	viper.SetEnvPrefix("BANDWIDTH")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
