@@ -1459,6 +1459,10 @@ Deviations:
   frontend is a self-contained Vite app with its own package.json.
 - **`tsconfig.json` does not extend `tsconfig.base.json`** — browser-bundle
   settings differ; the strict-family flags are copied inline.
+- **`.golangci.yml` adds one narrow exclusion** to the canonical config: the
+  `version` package name collides with stdlib `go/version` per revive's
+  var-naming rule; the package name is kept (it mirrors the maintainer's
+  other apps) and the single finding is excluded by path + text.
 
 ## Testing
 
