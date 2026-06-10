@@ -17,14 +17,14 @@ linters:
   default: standard
   enable:
     - revive
-  settings:
-    revive:
-      rules:
-        - name: var-naming
-          arguments:
-            - [] # allow-list
-            - [] # block-list
-            - [{"skipPackageNameChecks": true}] # options
+  exclusions:
+    rules:
+      # The version package intentionally mirrors the maintainer's other
+      # apps; revive flags it for colliding with stdlib go/version.
+      - path: version/version.go
+        linters:
+          - revive
+        text: 'var-naming: avoid package names'
 
 formatters:
   enable:

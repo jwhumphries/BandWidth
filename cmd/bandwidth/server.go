@@ -15,9 +15,9 @@ import (
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/spf13/viper"
 
-	"github.com/jwhumphries/bandwidth/internal/buildinfo"
 	"github.com/jwhumphries/bandwidth/internal/handlers"
 	"github.com/jwhumphries/bandwidth/internal/static"
+	"github.com/jwhumphries/bandwidth/version"
 )
 
 func runServer() error {
@@ -34,7 +34,7 @@ func runServer() error {
 
 	errCh := make(chan error, 1)
 	go func() {
-		logger.Info("starting server", "addr", srv.Addr, "version", buildinfo.Version)
+		logger.Info("starting server", "addr", srv.Addr, "version", version.Version)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}
