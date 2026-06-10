@@ -220,12 +220,12 @@ import (
 )
 
 // Healthz reports server liveness.
-func Healthz(c echo.Context) error {
+func Healthz(c *echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }
 ```
 
-Note: Echo v5.1.1 is current as of this plan. If the handler signature does not compile, check `go doc github.com/labstack/echo/v5.HandlerFunc` and adapt — but only `echo.New`, `e.GET`, `c.JSON`, `c.Request`, `c.Response`, and `middleware.Recover` are used in this entire plan, all stable across v4/v5.
+Note: Echo v5 API (verified against v5.1.1 during execution): `echo.HandlerFunc` is `func(c *echo.Context) error` (pointer context, unlike v4's interface), and `c.Response()` returns `http.ResponseWriter` — use `echo.ResolveResponseStatus(c.Response(), err)` to read the status in middleware.
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -326,7 +326,7 @@ import (
 // routing works on hard refresh and deep links.
 func RegisterSPA(e *echo.Echo, fsys fs.FS) {
 	fileServer := http.FileServerFS(fsys)
-	e.GET("/*", func(c echo.Context) error {
+	e.GET("/*", func(c *echo.Context) error {
 		req := c.Request()
 		path := strings.TrimPrefix(req.URL.Path, "/")
 		if path != "" {
@@ -529,14 +529,15 @@ func newLogger(level string) *slog.Logger {
 
 func requestLogger(logger *slog.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			start := time.Now()
 			err := next(c)
 			req := c.Request()
+			_, status := echo.ResolveResponseStatus(c.Response(), err)
 			logger.Info("request",
 				"method", req.Method,
 				"path", req.URL.Path,
-				"status", c.Response().Status,
+				"status", status,
 				"duration", time.Since(start).String(),
 			)
 			return err
