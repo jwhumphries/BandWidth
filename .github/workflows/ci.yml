@@ -6,16 +6,20 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
     env:
       DAGGER_NO_NAG: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Check
-        uses: dagger/dagger-for-github@v7
+        uses: dagger/dagger-for-github@b81317a976cb7f7125469707321849737cd1b3bc # v7
         with:
           version: "latest"
           verb: call
@@ -27,10 +31,10 @@ jobs:
     env:
       DAGGER_NO_NAG: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Release build
-        uses: dagger/dagger-for-github@v7
+        uses: dagger/dagger-for-github@b81317a976cb7f7125469707321849737cd1b3bc # v7
         with:
           version: "latest"
           verb: call
