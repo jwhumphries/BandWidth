@@ -1,0 +1,16 @@
+# Build artifacts
+tmp/
+bin/
+frontend/dist/
+frontend/node_modules/
+
+# The embedded dist is built only inside Dagger; keep the placeholder.
+internal/static/dist/*
+!internal/static/dist/.gitkeep
+
+# Runtime
+data/
+.env
+
+# OS
+.DS_Store

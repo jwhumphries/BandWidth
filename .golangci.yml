@@ -1,0 +1,27 @@
+# golangci-lint v2 configuration
+# Based on the Uber Go Style Guide's recommended linters.
+#
+# Default "standard" linters (enabled automatically):
+#   errcheck, govet, ineffassign, staticcheck, unused
+#
+# Additional linters enabled below complement the defaults
+# per the style guide's recommendations.
+
+version: "2"
+
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  default: standard
+  enable:
+    - revive
+
+formatters:
+  enable:
+    - goimports
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
