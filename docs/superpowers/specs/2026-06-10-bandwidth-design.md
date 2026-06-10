@@ -232,8 +232,8 @@ GET    /healthz
 - Canonical configs copied from the style-guides repo: `.golangci.yml`,
   `eslint.config.js`, `.prettierrc.json`, `tsconfig.base.json`.
 - fly.io: single Alpine container, Fly volume for the SQLite file. Exactly
-  one machine maximum (SQLite cannot multi-attach), but auto stop/start with
-  `min_machines_running = 0` keeps cost near zero. Optional later:
+  one always-on machine (SQLite cannot multi-attach; no auto stop/start —
+  the app fits under Fly's monthly billing minimum anyway). Optional later:
   Litestream backups.
 
 ## Out of Scope for v1
