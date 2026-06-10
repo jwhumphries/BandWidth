@@ -37,7 +37,7 @@ func newRootCmd() *cobra.Command {
 }
 
 // initConfig wires Viper to BANDWIDTH_* environment variables.
-// Keys: port (BANDWIDTH_PORT), log_level (BANDWIDTH_LOG_LEVEL).
+// Keys: port, log_level, db_path.
 func initConfig() {
 	viper.SetDefault("port", ":8080")
 	viper.SetDefault("log_level", "info")

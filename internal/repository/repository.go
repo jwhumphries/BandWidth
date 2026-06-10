@@ -27,7 +27,7 @@ func Open(path string) (*Repo, error) {
 		}
 	}
 	dsn := fmt.Sprintf(
-		"file:%s?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(1)",
+		"file:%s?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(1)",
 		path,
 	)
 	db, err := gorm.Open(gormlite.Open(dsn), &gorm.Config{
@@ -44,5 +44,22 @@ func Open(path string) (*Repo, error) {
 	); err != nil {
 		return nil, fmt.Errorf("migrate database: %w", err)
 	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("access connection pool: %w", err)
+	}
+	if path == ":memory:" {
+		// A second pool connection would see a separate, empty in-memory DB.
+		sqlDB.SetMaxOpenConns(1)
+	}
 	return &Repo{db: db}, nil
+}
+
+// Close releases the underlying database connections.
+func (r *Repo) Close() error {
+	sqlDB, err := r.db.DB()
+	if err != nil {
+		return err
+	}
+	return sqlDB.Close()
 }
