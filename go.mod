@@ -4,8 +4,10 @@ go 1.26
 
 require (
 	github.com/labstack/echo/v5 v5.1.1
+	github.com/ncruces/go-sqlite3/gormlite v0.34.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
+	gorm.io/gorm v1.31.1
 )
 
 require (
@@ -16,7 +18,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/ncruces/go-sqlite3 v0.34.4 // indirect
 	github.com/ncruces/go-sqlite3-wasm/v2 v2.6.35302 // indirect
-	github.com/ncruces/go-sqlite3/gormlite v0.34.0 // indirect
 	github.com/ncruces/julianday v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
@@ -29,5 +30,4 @@ require (
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	gorm.io/gorm v1.31.1 // indirect
 )

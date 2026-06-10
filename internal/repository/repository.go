@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/ncruces/go-sqlite3/embed" // embedded WASM SQLite
 	"github.com/ncruces/go-sqlite3/gormlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
