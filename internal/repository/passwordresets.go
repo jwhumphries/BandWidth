@@ -5,6 +5,7 @@ import (
 
 	"github.com/jwhumphries/bandwidth/internal/auth"
 	"github.com/jwhumphries/bandwidth/internal/model"
+	"gorm.io/gorm"
 )
 
 const passwordResetDuration = time.Hour
@@ -23,19 +24,24 @@ func (r *Repo) CreatePasswordReset(userID uint) (string, error) {
 	return token, nil
 }
 
-// ConsumePasswordReset marks a valid token used and returns its user ID.
+// ConsumePasswordReset atomically marks a valid token used and returns its
+// user ID. The guarded UPDATE ensures a token can be consumed only once,
+// even under concurrent requests.
 func (r *Repo) ConsumePasswordReset(token string) (uint, error) {
-	var reset model.PasswordReset
-	err := r.db.
+	hash := auth.HashToken(token)
+	res := r.db.Model(&model.PasswordReset{}).
 		Where("token_hash = ? AND expires_at > ? AND used_at IS NULL",
-			auth.HashToken(token), time.Now()).
-		First(&reset).Error
-	if err != nil {
-		return 0, err
+			hash, time.Now()).
+		Update("used_at", time.Now())
+	if res.Error != nil {
+		return 0, res.Error
 	}
-	now := time.Now()
-	reset.UsedAt = &now
-	if err := r.db.Save(&reset).Error; err != nil {
+	if res.RowsAffected != 1 {
+		return 0, gorm.ErrRecordNotFound
+	}
+
+	var reset model.PasswordReset
+	if err := r.db.Where("token_hash = ?", hash).First(&reset).Error; err != nil {
 		return 0, err
 	}
 	return reset.UserID, nil
