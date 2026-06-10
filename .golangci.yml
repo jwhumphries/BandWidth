@@ -17,6 +17,14 @@ linters:
   default: standard
   enable:
     - revive
+  settings:
+    revive:
+      rules:
+        - name: var-naming
+          arguments:
+            - [] # allow-list
+            - [] # block-list
+            - [{"skipPackageNameChecks": true}] # options
 
 formatters:
   enable:

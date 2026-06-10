@@ -186,7 +186,7 @@ func (m *Bandwidth) Release(
 		WithDirectory("/app/internal/static/dist", m.BuildFrontend(source)).
 		WithEnvVariable("CGO_ENABLED", "0").
 		WithExec([]string{"go", "build",
-			"-ldflags", "-s -w -X github.com/jwhumphries/bandwidth/version.Version=" + version,
+			"-ldflags", "-s -w -X github.com/jwhumphries/bandwidth/internal/buildinfo.Version=" + version,
 			"-o", "/out/bandwidth", "./cmd/bandwidth"}).
 		File("/out/bandwidth")
 

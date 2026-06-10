@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/jwhumphries/bandwidth/version"
+	"github.com/jwhumphries/bandwidth/internal/buildinfo"
 )
 
 func main() {
@@ -23,7 +23,7 @@ func newRootCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:           "bandwidth",
 		Short:         "Practice tracking for musicians and bands",
-		Version:       version.Version,
+		Version:       buildinfo.Version,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PersistentPreRunE: func(*cobra.Command, []string) error {
