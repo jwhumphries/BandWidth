@@ -25,6 +25,12 @@ linters:
         linters:
           - revive
         text: 'var-naming: avoid package names'
+      # The mail package name is intentional; net/mail is rarely imported
+      # directly and the name communicates purpose clearly.
+      - path: internal/mail/mail.go
+        linters:
+          - revive
+        text: 'var-naming: avoid package names'
 
 formatters:
   enable:
