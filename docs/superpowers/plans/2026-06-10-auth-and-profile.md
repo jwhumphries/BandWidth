@@ -14,7 +14,7 @@
 
 - Repo root: `/Users/john/code/git/BandWidth`, branch off `main` (e.g. `auth-and-profile`).
 - Echo v5 API facts (verified against v5.1.1 — do not "fix" these to v4 idioms): handlers are `func(c *echo.Context) error`; `c.Bind(&v)`, `c.Set/Get`, `c.SetCookie`, `c.NoContent` all exist; `middleware.CSRFConfig{...}.ToMiddleware()` returns `(echo.MiddlewareFunc, error)`; the CSRF middleware honors `Sec-Fetch-Site` headers; rate limiting via `middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{Rate, Burst, ExpiresIn}))`.
-- Go checks during development may run on the host (`go test ./...`); each task's final verification before commit is host-level, and `just check` gates Tasks 8, 11, and 14.
+- All verification runs through `just` recipes (inside Dagger): `just test` for Go tests, `just lint-go`, `just test-frontend`, `just typecheck`, `just lint-js`, `just format-check`, and `just check` as the full gate (Tasks 8, 11, 14). Host commands are limited to dependency management (`go get`, `go mod tidy`, `bun add`) and the dev-loop/manual smoke steps that are host-side by design. Where a task body below says `go test ./...` or `bun run test`, read it as `just test` / `just test-frontend`.
 - Frontend deps are installed with bun at latest (`bun add ...`).
 - JSON error responses come from Echo's default error handler (`{"message": "..."}`); handlers return `echo.NewHTTPError(code, message)`.
 - Spec deviation (approved during planning): no `BANDWIDTH_COOKIE_SECRET` — sessions are opaque 256-bit random tokens stored hashed in the DB, so no cookie signing is needed.
