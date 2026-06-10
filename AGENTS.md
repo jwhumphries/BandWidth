@@ -34,6 +34,10 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 - `version/` — version string injected via ldflags
 - `frontend/` — React SPA (Vite, React Router, Tailwind v4 + DaisyUI 5);
   Vite dev server proxies `/api` and `/healthz` to the Go server
+- `scripts/develop.sh` — the dev loop `just dev` runs (bun install, then
+  vite + air concurrently)
+- `.github/` — GitHub Actions CI (`workflows/ci.yml` calls the same Dagger
+  functions as `just`) and Renovate config
 - `.dagger/` — CI pipeline; the justfile is a thin wrapper over it
 
 ## Style guides & documented deviations
