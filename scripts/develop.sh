@@ -9,8 +9,11 @@ if ! command -v air >/dev/null 2>&1; then
   exit 1
 fi
 
+
+(cd frontend && bun install)
+
 trap 'kill 0' EXIT
 
-(cd frontend && bun install && exec bun run dev) &
+(cd frontend && exec bun run dev) &
 air &
 wait

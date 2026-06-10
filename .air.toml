@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 cmd = "go build -o ./tmp/bandwidth ./cmd/bandwidth"
 bin = "tmp/bandwidth"
 include_ext = ["go"]
-exclude_dir = ["frontend", "tmp", "bin", "data", ".dagger", "docs", "scripts"]
+exclude_dir = ["frontend", "tmp", "bin", "data", ".dagger", "docs", "scripts", ".git", ".github", ".claude"]
 
 [misc]
 clean_on_exit = true
