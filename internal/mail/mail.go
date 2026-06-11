@@ -20,3 +20,26 @@ func (Disabled) Enabled() bool { return false }
 func (Disabled) Send(string, string, string) error {
 	return errors.New("mail is not configured")
 }
+
+// Config holds SMTP settings; empty Host or From disables mail.
+type Config struct {
+	Host string
+	Port int
+	User string
+	Pass string
+	From string
+}
+
+// New returns an SMTP-backed Mailer, or Disabled when unconfigured.
+func New(cfg Config) Mailer {
+	if cfg.Host == "" || cfg.From == "" {
+		return Disabled{}
+	}
+	return newSMTP(cfg)
+}
+
+// newSMTP is replaced with a real implementation in the mail task.
+func newSMTP(cfg Config) Mailer {
+	_ = cfg
+	return Disabled{}
+}

@@ -37,11 +37,18 @@ func newRootCmd() *cobra.Command {
 }
 
 // initConfig wires Viper to BANDWIDTH_* environment variables.
-// Keys: port, log_level, db_path.
+// Keys: port, log_level, db_path, secure_cookies, base_url, smtp_*.
 func initConfig() {
 	viper.SetDefault("port", ":8080")
 	viper.SetDefault("log_level", "info")
 	viper.SetDefault("db_path", "data/bandwidth.db")
+	viper.SetDefault("secure_cookies", false)
+	viper.SetDefault("base_url", "http://localhost:3000")
+	viper.SetDefault("smtp_host", "")
+	viper.SetDefault("smtp_port", 587)
+	viper.SetDefault("smtp_user", "")
+	viper.SetDefault("smtp_pass", "")
+	viper.SetDefault("smtp_from", "")
 	viper.SetEnvPrefix("BANDWIDTH")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
