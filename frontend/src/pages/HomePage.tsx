@@ -23,12 +23,19 @@ export default function HomePage() {
   const [adding, setAdding] = useState(false);
   const [undo, setUndo] = useState<UndoState | null>(null);
   const [folderId, setFolderId] = useState<number | null>(null);
+  const [practiceError, setPracticeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!undo) return;
     const timer = setTimeout(() => setUndo(null), 6000);
     return () => clearTimeout(timer);
   }, [undo]);
+
+  useEffect(() => {
+    if (!practiceError) return;
+    const timer = setTimeout(() => setPracticeError(null), 6000);
+    return () => clearTimeout(timer);
+  }, [practiceError]);
 
   const selectedFolder = folders.find(f => f.id === folderId) ?? null;
 
@@ -51,10 +58,14 @@ export default function HomePage() {
     : folderSongs;
 
   const practiced = (songId: number, date: string) => {
+    setPracticeError(null);
     const song = songs.find(s => s.id === songId);
     logPractice.mutate(
       {id: songId, date},
-      {onSuccess: () => setUndo({songId, date, title: song?.title ?? 'song'})},
+      {
+        onSuccess: () => setUndo({songId, date, title: song?.title ?? 'song'}),
+        onError: () => setPracticeError('Could not log practice — try again.'),
+      },
     );
   };
 
@@ -106,12 +117,25 @@ export default function HomePage() {
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => {
-                  undoPractice.mutate({id: undo.songId, date: undo.date});
+                  undoPractice.mutate(
+                    {id: undo.songId, date: undo.date},
+                    {
+                      onError: () =>
+                        setPracticeError('Could not undo — try again.'),
+                    },
+                  );
                   setUndo(null);
                 }}
               >
                 Undo
               </button>
+            </div>
+          </div>
+        )}
+        {practiceError && (
+          <div className="toast toast-center">
+            <div role="alert" className="alert alert-error">
+              <span>{practiceError}</span>
             </div>
           </div>
         )}

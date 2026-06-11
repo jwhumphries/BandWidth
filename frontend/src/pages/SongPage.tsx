@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
-import {useNavigate, useParams} from 'react-router';
+import {Link, useNavigate, useParams} from 'react-router';
 import ConfirmModal from '../components/songs/ConfirmModal';
 import ResourceList from '../components/songs/ResourceList';
 import FolderPicker from '../components/folders/FolderPicker';
@@ -24,7 +24,7 @@ export default function SongPage() {
   const {id: idParam} = useParams();
   const id = Number(idParam);
   const navigate = useNavigate();
-  const {data: song} = useSong(id);
+  const {data: song, isPending, isError, error, refetch} = useSong(id);
   const updateSong = useUpdateSong(id);
   const deleteSong = useDeleteSong();
   const logPractice = useLogPractice();
@@ -44,10 +44,25 @@ export default function SongPage() {
     }
   }, [song, dirty]);
 
-  if (!song) {
+  if (isPending) {
     return (
       <div className="flex justify-center py-12">
         <span className="loading loading-spinner" aria-label="Loading" />
+      </div>
+    );
+  }
+  if (isError || !song) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-12">
+        <p>{error?.message ?? 'Could not load this song.'}</p>
+        <div className="flex gap-2">
+          <button className="btn" onClick={() => void refetch()}>
+            Retry
+          </button>
+          <Link className="btn btn-ghost" to="/">
+            Back to library
+          </Link>
+        </div>
       </div>
     );
   }
@@ -96,7 +111,9 @@ export default function SongPage() {
             id="status"
             className="select w-full"
             value={song.status}
-            onChange={e => updateSong.mutate({status: e.target.value})}
+            onChange={e =>
+              updateSong.mutate({status: e.target.value as SongStatus})
+            }
           >
             {statusOptions.map(o => (
               <option key={o.value} value={o.value}>

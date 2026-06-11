@@ -42,7 +42,7 @@ export default function ResourceList({
               className="link min-w-0 flex-1 truncate"
               href={r.url}
               target="_blank"
-              rel="noreferrer"
+              rel="noreferrer noopener"
             >
               {r.label ? (
                 <>

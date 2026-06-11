@@ -5,6 +5,7 @@ import type {
   Resource,
   SongDetail,
   SongListItem,
+  SongStatus,
 } from '../lib/types';
 
 export function useSongs() {
@@ -34,7 +35,7 @@ export function useUpdateSong(id: number) {
   return useMutation<
     SongDetail,
     ApiError,
-    {title?: string; artist?: string; status?: string; notes?: string}
+    {title?: string; artist?: string; status?: SongStatus; notes?: string}
   >({
     mutationFn: data => api.patch<SongDetail>(`/api/songs/${id}`, data),
     onSuccess: detail => {
