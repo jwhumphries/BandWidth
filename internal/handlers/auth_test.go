@@ -189,6 +189,14 @@ func TestLoginWithTOTP(t *testing.T) {
 		t.Fatalf("valid code: %d %s", rec.Code, rec.Body.String())
 	}
 
+	// Whitespace around the code is tolerated.
+	code2, _ := totp.GenerateCode(key.Secret, time.Now())
+	rec = postJSON(e, "/api/auth/login",
+		fmt.Sprintf(`{"login":"alice","password":"hunter2hunter2","totpCode":" %s "}`, code2))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("padded code: %d %s", rec.Code, rec.Body.String())
+	}
+
 	// Backup code works once (case-insensitive).
 	rec = postJSON(e, "/api/auth/login", `{"login":"alice","password":"hunter2hunter2","totpCode":"aaaa-bbbb"}`)
 	if rec.Code != http.StatusOK {

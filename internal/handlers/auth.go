@@ -78,7 +78,7 @@ func (a *API) Login(c *echo.Context) error {
 			})
 		}
 		code := strings.ToUpper(strings.TrimSpace(req.TOTPCode))
-		if !auth.ValidateTOTP(req.TOTPCode, user.TOTPSecret) &&
+		if !auth.ValidateTOTP(code, user.TOTPSecret) &&
 			!a.Repo.ConsumeBackupCode(user.ID, code) {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid two-factor code")
 		}
