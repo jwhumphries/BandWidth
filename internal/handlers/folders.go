@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 
 	appmw "github.com/jwhumphries/bandwidth/internal/middleware"
 	"github.com/jwhumphries/bandwidth/internal/model"
@@ -109,7 +111,10 @@ func (a *API) ReorderFolders(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
 	if err := a.Repo.ReorderFolders(user.ID, req.FolderIDs); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "one or more folders not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusBadRequest, "one or more folders not found")
+		}
+		return err
 	}
 	return c.NoContent(http.StatusNoContent)
 }
@@ -142,7 +147,10 @@ func (a *API) SetFolderEntries(c *echo.Context) error {
 		}
 	}
 	if err := a.Repo.SetFolderEntries(id, user.ID, songIDs); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "folder or songs not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusBadRequest, "folder or songs not found")
+		}
+		return err
 	}
 	return c.NoContent(http.StatusNoContent)
 }

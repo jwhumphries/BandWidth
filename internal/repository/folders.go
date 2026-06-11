@@ -108,7 +108,7 @@ func (r *Repo) ReorderFolders(userID uint, folderIDs []uint) error {
 				return res.Error
 			}
 			if res.RowsAffected != 1 {
-				return fmt.Errorf("folder %d not found", id)
+				return fmt.Errorf("folder %d not found: %w", id, gorm.ErrRecordNotFound)
 			}
 		}
 		return nil
@@ -130,7 +130,7 @@ func (r *Repo) SetFolderEntries(folderID, userID uint, songIDs []uint) error {
 			return err
 		}
 		if visible != int64(len(songIDs)) {
-			return fmt.Errorf("one or more songs not found")
+			return fmt.Errorf("one or more songs not found: %w", gorm.ErrRecordNotFound)
 		}
 	}
 	return r.db.Transaction(func(tx *gorm.DB) error {
