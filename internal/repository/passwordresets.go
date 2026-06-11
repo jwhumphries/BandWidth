@@ -3,9 +3,10 @@ package repository
 import (
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/jwhumphries/bandwidth/internal/auth"
 	"github.com/jwhumphries/bandwidth/internal/model"
-	"gorm.io/gorm"
 )
 
 const passwordResetDuration = time.Hour
