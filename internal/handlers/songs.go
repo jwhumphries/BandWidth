@@ -102,9 +102,13 @@ func (a *API) CreateSong(c *echo.Context) error {
 	}
 	req.Title = strings.TrimSpace(req.Title)
 	req.Artist = strings.TrimSpace(req.Artist)
-	if req.Title == "" || len(req.Title) > maxTitleLen || len(req.Artist) > maxTitleLen {
+	if req.Title == "" || len(req.Title) > maxTitleLen {
 		return echo.NewHTTPError(http.StatusBadRequest,
-			"a title (at most 200 characters) is required")
+			"title must be 1-200 characters")
+	}
+	if len(req.Artist) > maxTitleLen {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			"artist must be at most 200 characters")
 	}
 	song, err := a.Repo.CreateSong(user.ID, req.Title, req.Artist)
 	if err != nil {
@@ -164,28 +168,25 @@ func (a *API) UpdateSong(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
 
-	if req.Title != nil || req.Artist != nil {
-		if req.Title != nil {
-			title := strings.TrimSpace(*req.Title)
-			if title == "" || len(title) > maxTitleLen {
-				return echo.NewHTTPError(http.StatusBadRequest,
-					"title must be 1-200 characters")
-			}
-			song.Title = title
+	// Validate all fields before any write.
+	var stagedTitle *string
+	if req.Title != nil {
+		title := strings.TrimSpace(*req.Title)
+		if title == "" || len(title) > maxTitleLen {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				"title must be 1-200 characters")
 		}
-		if req.Artist != nil {
-			artist := strings.TrimSpace(*req.Artist)
-			if len(artist) > maxTitleLen {
-				return echo.NewHTTPError(http.StatusBadRequest,
-					"artist must be at most 200 characters")
-			}
-			song.Artist = artist
-		}
-		if err := a.Repo.SaveSong(song); err != nil {
-			return err
-		}
+		stagedTitle = &title
 	}
-
+	var stagedArtist *string
+	if req.Artist != nil {
+		artist := strings.TrimSpace(*req.Artist)
+		if len(artist) > maxTitleLen {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				"artist must be at most 200 characters")
+		}
+		stagedArtist = &artist
+	}
 	var status *model.SongStatus
 	if req.Status != nil {
 		s := model.SongStatus(*req.Status)
@@ -196,6 +197,19 @@ func (a *API) UpdateSong(c *echo.Context) error {
 	}
 	if req.Notes != nil && len(*req.Notes) > maxNotesLen {
 		return echo.NewHTTPError(http.StatusBadRequest, "notes too long")
+	}
+
+	// All fields valid — now write.
+	if stagedTitle != nil || stagedArtist != nil {
+		if stagedTitle != nil {
+			song.Title = *stagedTitle
+		}
+		if stagedArtist != nil {
+			song.Artist = *stagedArtist
+		}
+		if err := a.Repo.SaveSong(song); err != nil {
+			return err
+		}
 	}
 	if status != nil || req.Notes != nil {
 		if err := a.Repo.UpsertAnnotation(song.ID, user.ID, status, req.Notes); err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -101,6 +102,17 @@ func TestSongCRUD(t *testing.T) {
 		`{"status":"shredded"}`, cookie)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("bad status: %d, want 400", rec.Code)
+	}
+
+	// A bad status must not partially apply the valid identity fields.
+	rec = jsonReq(e, http.MethodPatch, fmt.Sprintf("/api/songs/%d", created.ID),
+		`{"title":"Should Not Stick","status":"shredded"}`, cookie)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("mixed invalid patch: %d, want 400", rec.Code)
+	}
+	rec = jsonReq(e, http.MethodGet, fmt.Sprintf("/api/songs/%d", created.ID), "", cookie)
+	if strings.Contains(rec.Body.String(), "Should Not Stick") {
+		t.Error("identity persisted despite validation failure")
 	}
 
 	// Delete.
