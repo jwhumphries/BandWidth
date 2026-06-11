@@ -28,7 +28,7 @@ func userResponse(u *model.User) map[string]any {
 	}
 }
 
-func (a *API) setSessionCookie(c *echo.Context, token string) { //nolint:unused // used by the auth handlers task
+func (a *API) setSessionCookie(c *echo.Context, token string) {
 	c.SetCookie(&http.Cookie{
 		Name:     auth.SessionCookieName,
 		Value:    token,
@@ -40,7 +40,7 @@ func (a *API) setSessionCookie(c *echo.Context, token string) { //nolint:unused 
 	})
 }
 
-func (a *API) clearSessionCookie(c *echo.Context) { //nolint:unused // used by the auth handlers task
+func (a *API) clearSessionCookie(c *echo.Context) {
 	c.SetCookie(&http.Cookie{
 		Name:     auth.SessionCookieName,
 		Value:    "",
