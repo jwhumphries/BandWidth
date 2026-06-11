@@ -33,7 +33,11 @@ export default function AccountSettings() {
           id="username"
           className="input w-full"
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={e => {
+            setSaved(false);
+            setUsername(e.target.value);
+          }}
+          disabled={updateMe.isPending}
           required
         />
         <label className="label" htmlFor="email">
@@ -44,7 +48,11 @@ export default function AccountSettings() {
           type="email"
           className="input w-full"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={e => {
+            setSaved(false);
+            setEmail(e.target.value);
+          }}
+          disabled={updateMe.isPending}
           required
         />
         {updateMe.error && (

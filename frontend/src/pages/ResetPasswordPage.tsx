@@ -18,7 +18,15 @@ export default function ResetPasswordPage() {
     <main className="hero bg-base-200 min-h-screen">
       <div className="hero-content w-full max-w-sm flex-col">
         <h1 className="text-4xl font-bold">Choose a new password</h1>
-        {confirm.isSuccess ? (
+        {!token ? (
+          <p>
+            Invalid or expired reset link. Request a new one from the{' '}
+            <Link className="link" to="/forgot-password">
+              reset password page
+            </Link>
+            .
+          </p>
+        ) : confirm.isSuccess ? (
           <p>
             Password updated.{' '}
             <Link className="link" to="/login">

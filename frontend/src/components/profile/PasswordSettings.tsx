@@ -36,6 +36,7 @@ export default function PasswordSettings() {
           className="input w-full"
           value={currentPassword}
           onChange={e => setCurrentPassword(e.target.value)}
+          disabled={changePassword.isPending}
           autoComplete="current-password"
           required
         />
@@ -48,6 +49,7 @@ export default function PasswordSettings() {
           className="input w-full"
           value={newPassword}
           onChange={e => setNewPassword(e.target.value)}
+          disabled={changePassword.isPending}
           minLength={8}
           autoComplete="new-password"
           required
