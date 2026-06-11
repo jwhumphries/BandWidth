@@ -28,7 +28,8 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 
 - `cmd/bandwidth/` — Cobra entry point, Viper config (`BANDWIDTH_*` env
   vars), Echo server wiring, graceful shutdown
-- `internal/handlers/` — HTTP handlers (healthz, SPA fallback)
+- `internal/handlers/` — HTTP handlers (healthz, SPA fallback, auth,
+  account, 2FA, password reset) sharing one `API` dependency struct
 - `internal/static/` — `go:embed` of the frontend build; locally only a
   placeholder, populated inside the Dagger release build
 - `internal/model/` — persisted domain types (User, Session, BackupCode,
