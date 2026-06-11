@@ -29,11 +29,11 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 - `cmd/bandwidth/` — Cobra entry point, Viper config (`BANDWIDTH_*` env
   vars), Echo server wiring, graceful shutdown
 - `internal/handlers/` — HTTP handlers (healthz, SPA fallback, auth,
-  account, 2FA, password reset) sharing one `API` dependency struct
+  account, 2FA, password reset, songs, practice, resources, folders) sharing one `API` dependency struct
 - `internal/static/` — `go:embed` of the frontend build; locally only a
   placeholder, populated inside the Dagger release build
 - `internal/model/` — persisted domain types (User, Session, BackupCode,
-  PasswordReset)
+  PasswordReset, Song, SongAnnotation, Resource, PracticeEvent, Folder, FolderEntry)
 - `internal/repository/` — GORM/SQLite persistence (`Repo` struct; CGO-free
   driver `ncruces/go-sqlite3` via gormlite, WAL mode, AutoMigrate at startup)
 - `internal/auth/` — argon2id hashing, random tokens, TOTP, backup codes
@@ -63,6 +63,18 @@ carried in an HttpOnly Lax cookie — there is no cookie-signing secret.
 CSRF uses Echo v5's fetch-metadata-aware middleware (`Sec-Fetch-Site`);
 tests must set `Sec-Fetch-Site: same-origin` on mutating requests.
 Login/signup/reset endpoints are rate limited (1 req/s, burst 5, per IP).
+
+## Domain model
+
+Songs are identity-only (title/artist + owner); ALL metadata — status
+(`not_learned|learning|learned|nailed`), notes, resources, practice events —
+lives in subject-keyed rows (subject = a user now; band columns exist but
+are unwritten until the bands plan). A missing annotation row reads as
+not_learned/empty and is created lazily on first edit. Practice events are
+unique per (song, subject, date) with YYYY-MM-DD string dates; the client
+sends its local date. Folders are playlist-style (one song may be in many
+folders) with integer positions reindexed on reorder; deleting a folder
+never deletes songs.
 
 ## Style guides & documented deviations
 
