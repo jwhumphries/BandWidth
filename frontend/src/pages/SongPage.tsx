@@ -153,14 +153,21 @@ export default function SongPage() {
             <button
               className="btn btn-ghost"
               disabled={!backfill}
-              onClick={() => {
-                logPractice.mutate({id, date: backfill});
-                setBackfill('');
-              }}
+              onClick={() =>
+                logPractice.mutate(
+                  {id, date: backfill},
+                  {onSuccess: () => setBackfill('')},
+                )
+              }
             >
               Log past day
             </button>
           </div>
+          {logPractice.error && (
+            <div role="alert" className="alert alert-error">
+              {logPractice.error.message}
+            </div>
+          )}
         </div>
       </section>
 
