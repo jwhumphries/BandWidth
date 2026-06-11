@@ -1,7 +1,7 @@
 // Package mail sends transactional email.
 package mail
 
-import "fmt"
+import "errors"
 
 // Mailer sends transactional email. When not configured it is disabled and
 // dependent features (password reset) are hidden.
@@ -18,5 +18,5 @@ func (Disabled) Enabled() bool { return false }
 
 // Send always fails.
 func (Disabled) Send(string, string, string) error {
-	return fmt.Errorf("mail is not configured")
+	return errors.New("mail is not configured")
 }

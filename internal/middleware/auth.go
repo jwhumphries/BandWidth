@@ -31,7 +31,8 @@ func RequireAuth(repo *repository.Repo) echo.MiddlewareFunc {
 	}
 }
 
-// CurrentUser returns the authenticated user stored by RequireAuth.
+// CurrentUser returns the authenticated user stored by RequireAuth, or nil
+// when the route was not guarded by RequireAuth.
 func CurrentUser(c *echo.Context) *model.User {
 	user, _ := c.Get(userContextKey).(*model.User)
 	return user

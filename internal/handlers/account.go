@@ -10,5 +10,9 @@ import (
 
 // Me returns the authenticated user.
 func (a *API) Me(c *echo.Context) error {
-	return c.JSON(http.StatusOK, userResponse(appmw.CurrentUser(c)))
+	user := appmw.CurrentUser(c)
+	if user == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
+	return c.JSON(http.StatusOK, userResponse(user))
 }
