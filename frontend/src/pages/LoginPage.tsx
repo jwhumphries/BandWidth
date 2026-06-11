@@ -71,6 +71,7 @@ export default function LoginPage() {
                   value={totpCode}
                   onChange={e => setTotpCode(e.target.value)}
                   placeholder="123456 or backup code"
+                  autoComplete="one-time-code"
                   autoFocus
                 />
               </>

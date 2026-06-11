@@ -77,4 +77,17 @@ describe('LoginPage', () => {
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     expect(screen.queryByText(/forgot password/i)).not.toBeInTheDocument();
   });
+
+  it('shows the forgot-password link when the feature is on', async () => {
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      if (String(input).includes('/api/auth/features')) {
+        return Promise.resolve(jsonResponse(200, {passwordReset: true}));
+      }
+      return Promise.resolve(jsonResponse(404, {message: 'not found'}));
+    });
+    renderWithProviders(<LoginPage />);
+    await waitFor(() =>
+      expect(screen.getByText(/forgot password/i)).toBeInTheDocument(),
+    );
+  });
 });
