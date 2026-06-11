@@ -6,7 +6,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
-import {useState} from 'react';
+import {useState, useRef} from 'react';
 import type {FormEvent} from 'react';
 import ConfirmModal from '../songs/ConfirmModal';
 import {
@@ -35,9 +35,14 @@ function SortableFolderRow({
     useSortable({id: folder.id});
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(folder.name);
+  const submitted = useRef(false);
 
   const submitRename = (e: FormEvent) => {
     e.preventDefault();
+    if (submitted.current) {
+      return;
+    }
+    submitted.current = true;
     if (name.trim()) {
       onRename(name.trim());
     }
@@ -82,6 +87,7 @@ function SortableFolderRow({
         className="btn btn-ghost btn-xs"
         aria-label={`Rename ${folder.name}`}
         onClick={() => {
+          submitted.current = false;
           setName(folder.name);
           setEditing(true);
         }}
