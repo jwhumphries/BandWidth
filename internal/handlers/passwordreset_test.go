@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"regexp"
 	"sync"
 	"testing"
@@ -81,6 +82,13 @@ func TestPasswordResetFlow(t *testing.T) {
 	}
 	token := m[1]
 
+	// A live session, to prove confirm revokes it.
+	lrec := postJSON(e, "/api/auth/login", `{"login":"alice","password":"hunter2hunter2"}`)
+	if lrec.Code != http.StatusOK {
+		t.Fatalf("pre-reset login: %d", lrec.Code)
+	}
+	preCookie := sessionCookie(t, lrec)
+
 	// Bad token → 400.
 	rec = postJSON(e, "/api/auth/password-reset/confirm", `{"token":"bogus","newPassword":"newpassword99"}`)
 	if rec.Code != http.StatusBadRequest {
@@ -98,6 +106,16 @@ func TestPasswordResetFlow(t *testing.T) {
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("confirm: %d %s", rec.Code, rec.Body.String())
 	}
+
+	// All pre-reset sessions are revoked.
+	mreq := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	mreq.AddCookie(preCookie)
+	mrec := httptest.NewRecorder()
+	e.ServeHTTP(mrec, mreq)
+	if mrec.Code != http.StatusUnauthorized {
+		t.Fatalf("old session after reset: %d, want 401", mrec.Code)
+	}
+
 	if rec := postJSON(e, "/api/auth/login", `{"login":"alice","password":"newpassword99"}`); rec.Code != http.StatusOK {
 		t.Fatalf("login with new password: %d", rec.Code)
 	}

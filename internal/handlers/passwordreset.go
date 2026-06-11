@@ -27,10 +27,14 @@ func (a *API) RequestPasswordReset(c *echo.Context) error {
 	if user, err := a.Repo.UserByLogin(email); err == nil {
 		if token, err := a.Repo.CreatePasswordReset(user.ID); err == nil {
 			link := fmt.Sprintf("%s/reset-password?token=%s", a.BaseURL, token)
-			_ = a.Mailer.Send(user.Email, "Reset your BandWidth password",
+			if err := a.Mailer.Send(user.Email, "Reset your BandWidth password",
 				"Someone (hopefully you) asked to reset your BandWidth password.\n\n"+
 					"Reset it within the next hour: "+link+"\n\n"+
-					"If this wasn't you, ignore this email.")
+					"If this wasn't you, ignore this email."); err != nil {
+				// Response stays 204 (no account enumeration), but operators
+				// need to know the relay is broken.
+				a.logger().Warn("password reset email failed", "error", err)
+			}
 		}
 	}
 	return c.NoContent(http.StatusNoContent)
@@ -54,6 +58,9 @@ func (a *API) ConfirmPasswordReset(c *echo.Context) error {
 			"new password must be at least 8 characters")
 	}
 
+	// The token is consumed before the password write; if hashing or saving
+	// fails the token is burned and the user re-requests a link. Accepted
+	// trade-off to keep single-use enforcement atomic.
 	userID, err := a.Repo.ConsumePasswordReset(req.Token)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid or expired reset token")

@@ -48,6 +48,7 @@ func runServer() error {
 	api := &handlers.API{
 		Repo:          repo,
 		Mailer:        mailer,
+		Logger:        logger,
 		BaseURL:       viper.GetString("base_url"),
 		SecureCookies: viper.GetBool("secure_cookies"),
 	}

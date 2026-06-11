@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -15,8 +16,17 @@ import (
 type API struct {
 	Repo          *repository.Repo
 	Mailer        mail.Mailer
+	Logger        *slog.Logger
 	BaseURL       string
 	SecureCookies bool
+}
+
+// logger returns the configured logger, or the process default.
+func (a *API) logger() *slog.Logger {
+	if a.Logger != nil {
+		return a.Logger
+	}
+	return slog.Default()
 }
 
 func userResponse(u *model.User) map[string]any {
