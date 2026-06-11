@@ -14,7 +14,7 @@ export default function ConfirmModal({
   onCancel: () => void;
 }) {
   return (
-    <dialog className={`modal ${open ? 'modal-open' : ''}`}>
+    <dialog className={`modal ${open ? 'modal-open' : ''}`} open={open}>
       <div className="modal-box">
         <h3 className="text-lg font-bold">{title}</h3>
         <p className="py-2">{message}</p>
