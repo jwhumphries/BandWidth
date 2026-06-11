@@ -100,6 +100,10 @@ func TestDeleteSongCascades(t *testing.T) {
 
 	status := model.StatusLearned
 	_ = repo.UpsertAnnotation(song.ID, user.ID, &status, nil)
+	_, _ = repo.CreateResource(song.ID, user.ID, "https://example.com/tab", "tab")
+	_ = repo.LogPractice(song.ID, user.ID, "2026-06-10")
+	folder, _ := repo.CreateFolder(user.ID, "Setlist")
+	_ = repo.SetFolderEntries(folder.ID, user.ID, []uint{song.ID})
 
 	if err := repo.DeleteSong(song.ID, user.ID); err != nil {
 		t.Fatalf("DeleteSong: %v", err)
@@ -108,6 +112,9 @@ func TestDeleteSongCascades(t *testing.T) {
 	for table, m := range map[string]any{
 		"songs":            &model.Song{},
 		"song_annotations": &model.SongAnnotation{},
+		"resources":        &model.Resource{},
+		"practice_events":  &model.PracticeEvent{},
+		"folder_entries":   &model.FolderEntry{},
 	} {
 		var n int64
 		repo.db.Model(m).Count(&n)
