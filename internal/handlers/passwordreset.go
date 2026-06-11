@@ -1,17 +1,77 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v5"
+
+	"github.com/jwhumphries/bandwidth/internal/auth"
 )
 
-// RequestPasswordReset is implemented in the password reset task.
-func (a *API) RequestPasswordReset(_ *echo.Context) error {
-	return echo.NewHTTPError(http.StatusNotImplemented, "not implemented")
+// RequestPasswordReset emails a reset link. Always 204 for enabled mailers
+// (no account enumeration); 404 when mail is not configured.
+func (a *API) RequestPasswordReset(c *echo.Context) error {
+	if !a.Mailer.Enabled() {
+		return echo.NewHTTPError(http.StatusNotFound, "not found")
+	}
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
+	}
+
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+	if user, err := a.Repo.UserByLogin(email); err == nil {
+		if token, err := a.Repo.CreatePasswordReset(user.ID); err == nil {
+			link := fmt.Sprintf("%s/reset-password?token=%s", a.BaseURL, token)
+			_ = a.Mailer.Send(user.Email, "Reset your BandWidth password",
+				"Someone (hopefully you) asked to reset your BandWidth password.\n\n"+
+					"Reset it within the next hour: "+link+"\n\n"+
+					"If this wasn't you, ignore this email.")
+		}
+	}
+	return c.NoContent(http.StatusNoContent)
 }
 
-// ConfirmPasswordReset is implemented in the password reset task.
-func (a *API) ConfirmPasswordReset(_ *echo.Context) error {
-	return echo.NewHTTPError(http.StatusNotImplemented, "not implemented")
+// ConfirmPasswordReset sets a new password from a valid reset token and
+// revokes all existing sessions.
+func (a *API) ConfirmPasswordReset(c *echo.Context) error {
+	if !a.Mailer.Enabled() {
+		return echo.NewHTTPError(http.StatusNotFound, "not found")
+	}
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"newPassword"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
+	}
+	if len(req.NewPassword) < 8 {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			"new password must be at least 8 characters")
+	}
+
+	userID, err := a.Repo.ConsumePasswordReset(req.Token)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid or expired reset token")
+	}
+	user, err := a.Repo.UserByID(userID)
+	if err != nil {
+		return err
+	}
+	hash, err := auth.HashPassword(req.NewPassword)
+	if err != nil {
+		return err
+	}
+	user.PasswordHash = hash
+	if err := a.Repo.SaveUser(user); err != nil {
+		return err
+	}
+	if err := a.Repo.DeleteUserSessions(user.ID); err != nil {
+		return err
+	}
+	return c.NoContent(http.StatusNoContent)
 }

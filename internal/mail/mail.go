@@ -1,7 +1,12 @@
 // Package mail sends transactional email.
 package mail
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+
+	gomail "github.com/wneessen/go-mail"
+)
 
 // Mailer sends transactional email. When not configured it is disabled and
 // dependent features (password reset) are hidden.
@@ -35,11 +40,38 @@ func New(cfg Config) Mailer {
 	if cfg.Host == "" || cfg.From == "" {
 		return Disabled{}
 	}
-	return newSMTP(cfg)
+	return &smtpMailer{cfg: cfg}
 }
 
-// newSMTP is replaced with a real implementation in the mail task.
-func newSMTP(cfg Config) Mailer {
-	_ = cfg
-	return Disabled{}
+type smtpMailer struct{ cfg Config }
+
+func (m *smtpMailer) Enabled() bool { return true }
+
+func (m *smtpMailer) Send(to, subject, body string) error {
+	msg := gomail.NewMsg()
+	if err := msg.From(m.cfg.From); err != nil {
+		return fmt.Errorf("invalid from address: %w", err)
+	}
+	if err := msg.To(to); err != nil {
+		return fmt.Errorf("invalid recipient: %w", err)
+	}
+	msg.Subject(subject)
+	msg.SetBodyString(gomail.TypeTextPlain, body)
+
+	opts := []gomail.Option{
+		gomail.WithPort(m.cfg.Port),
+		gomail.WithTLSPortPolicy(gomail.TLSOpportunistic),
+	}
+	if m.cfg.User != "" {
+		opts = append(opts,
+			gomail.WithSMTPAuth(gomail.SMTPAuthPlain),
+			gomail.WithUsername(m.cfg.User),
+			gomail.WithPassword(m.cfg.Pass),
+		)
+	}
+	client, err := gomail.NewClient(m.cfg.Host, opts...)
+	if err != nil {
+		return fmt.Errorf("smtp client: %w", err)
+	}
+	return client.DialAndSend(msg)
 }
