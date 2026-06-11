@@ -52,7 +52,7 @@ func runServer() error {
 		SecureCookies: viper.GetBool("secure_cookies"),
 	}
 
-	e, err := newEcho(logger, api, repo)
+	e, err := newEcho(logger, api)
 	if err != nil {
 		return err
 	}
@@ -85,8 +85,11 @@ func runServer() error {
 	return srv.Shutdown(shutdownCtx)
 }
 
-func newEcho(logger *slog.Logger, api *handlers.API, repo *repository.Repo) (*echo.Echo, error) {
+func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	e := echo.New()
+	// fly.io's edge proxy appends the real client IP to X-Forwarded-For;
+	// the default legacy extractor trusts the leftmost (spoofable) entry.
+	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 	e.Use(middleware.Recover())
 	e.Use(requestLogger(logger))
 
@@ -103,6 +106,8 @@ func newEcho(logger *slog.Logger, api *handlers.API, repo *repository.Repo) (*ec
 
 	apiGroup := e.Group("/api", csrfMW)
 
+	// One shared store across signup/login/reset: a NAT'd office burns the
+	// burst faster, but the 1 rps refill keeps the window short.
 	authLimiter := middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(
 		middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 5, ExpiresIn: 3 * time.Minute},
 	))
@@ -114,12 +119,12 @@ func newEcho(logger *slog.Logger, api *handlers.API, repo *repository.Repo) (*ec
 	authGroup.POST("/password-reset", api.RequestPasswordReset, authLimiter)
 	authGroup.POST("/password-reset/confirm", api.ConfirmPasswordReset, authLimiter)
 
-	twofa := apiGroup.Group("/auth/2fa", appmw.RequireAuth(repo))
+	twofa := apiGroup.Group("/auth/2fa", appmw.RequireAuth(api.Repo))
 	twofa.POST("/setup", api.TwoFactorSetup)
 	twofa.POST("/verify", api.TwoFactorVerify)
 	twofa.POST("/disable", api.TwoFactorDisable)
 
-	me := apiGroup.Group("/me", appmw.RequireAuth(repo))
+	me := apiGroup.Group("/me", appmw.RequireAuth(api.Repo))
 	me.GET("", api.Me)
 	me.PATCH("", api.UpdateMe)
 	me.PUT("/password", api.ChangePassword)

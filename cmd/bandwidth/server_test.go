@@ -21,8 +21,13 @@ func testServer(t *testing.T) *echo.Echo {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() {
+		if err := repo.Close(); err != nil {
+			t.Errorf("closing test repo: %v", err)
+		}
+	})
 	api := &handlers.API{Repo: repo, Mailer: mail.Disabled{}, BaseURL: "http://test"}
-	e, err := newEcho(slog.New(slog.NewTextHandler(io.Discard, nil)), api, repo)
+	e, err := newEcho(slog.New(slog.NewTextHandler(io.Discard, nil)), api)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,6 +63,26 @@ func TestNewEchoServesHealthz(t *testing.T) {
 
 func TestSignupLoginMeFlow(t *testing.T) {
 	e := testServer(t)
+
+	// Issue a plain GET (no Sec-Fetch-Site) so the CSRF middleware falls
+	// through to the legacy token path, which is where it sets the cookie.
+	// Browsers that omit Sec-Fetch-Site (direct navigation, curl, non-Fetch
+	// requests) receive the _csrf cookie so they can supply the token on
+	// subsequent state-changing requests.
+	featReq := httptest.NewRequest(http.MethodGet, "/api/auth/features", nil)
+	featRec := httptest.NewRecorder()
+	e.ServeHTTP(featRec, featReq)
+
+	// The CSRF middleware must issue its cookie to new clients.
+	hasCSRF := false
+	for _, c := range featRec.Result().Cookies() {
+		if c.Name == "_csrf" || c.Name == "csrf" {
+			hasCSRF = true
+		}
+	}
+	if !hasCSRF {
+		t.Error("no CSRF cookie issued on first response")
+	}
 
 	rec := do(e, http.MethodPost, "/api/auth/signup",
 		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`, nil)
