@@ -30,4 +30,27 @@ describe('RequireAuth', () => {
     );
     expect(screen.queryByText(/secret home/i)).not.toBeInTheDocument();
   });
+
+  it('offers a retry instead of redirecting on server errors', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({message: 'boom'}), {status: 500}),
+        ),
+    );
+    renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<p>login page</p>} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<p>secret home</p>} />
+        </Route>
+      </Routes>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', {name: /retry/i})).toBeInTheDocument(),
+    );
+    expect(screen.queryByText(/login page/i)).not.toBeInTheDocument();
+  });
 });

@@ -8,18 +8,27 @@ export default function AccountSettings() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !dirty) {
       setUsername(user.username);
       setEmail(user.email);
     }
-  }, [user]);
+  }, [user, dirty]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setSaved(false);
-    updateMe.mutate({username, email}, {onSuccess: () => setSaved(true)});
+    updateMe.mutate(
+      {username, email},
+      {
+        onSuccess: () => {
+          setSaved(true);
+          setDirty(false);
+        },
+      },
+    );
   };
 
   return (
@@ -35,6 +44,7 @@ export default function AccountSettings() {
           value={username}
           onChange={e => {
             setSaved(false);
+            setDirty(true);
             setUsername(e.target.value);
           }}
           disabled={updateMe.isPending}
@@ -50,6 +60,7 @@ export default function AccountSettings() {
           value={email}
           onChange={e => {
             setSaved(false);
+            setDirty(true);
             setEmail(e.target.value);
           }}
           disabled={updateMe.isPending}
