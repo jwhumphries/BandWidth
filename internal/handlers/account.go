@@ -44,7 +44,7 @@ func (a *API) UpdateMe(c *echo.Context) error {
 	}
 	if req.Email != nil {
 		email := strings.ToLower(strings.TrimSpace(*req.Email))
-		if !strings.Contains(email, "@") {
+		if !validEmail(email) {
 			return echo.NewHTTPError(http.StatusBadRequest, "a valid email address is required")
 		}
 		user.Email = email

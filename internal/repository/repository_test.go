@@ -12,6 +12,11 @@ func testRepo(t *testing.T) *Repo {
 	if err != nil {
 		t.Fatalf("Open: %v", err)
 	}
+	t.Cleanup(func() {
+		if err := repo.Close(); err != nil {
+			t.Errorf("closing test repo: %v", err)
+		}
+	})
 	return repo
 }
 

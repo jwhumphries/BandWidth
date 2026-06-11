@@ -42,6 +42,9 @@ func Open(path string) (*Repo, error) {
 		&model.BackupCode{},
 		&model.PasswordReset{},
 	); err != nil {
+		if sqlDB, dbErr := db.DB(); dbErr == nil {
+			_ = sqlDB.Close()
+		}
 		return nil, fmt.Errorf("migrate database: %w", err)
 	}
 	sqlDB, err := db.DB()

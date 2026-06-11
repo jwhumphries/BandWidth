@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	netmail "net/mail"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -9,6 +10,12 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/auth"
 	"github.com/jwhumphries/bandwidth/internal/repository"
 )
+
+// validEmail reports whether s is a plain RFC 5322 address (no display name).
+func validEmail(s string) bool {
+	addr, err := netmail.ParseAddress(s)
+	return err == nil && addr.Address == s
+}
 
 type signupRequest struct {
 	Username string `json:"username"`
@@ -28,7 +35,7 @@ func (a *API) Signup(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest,
 			"username and a password of at least 8 characters are required")
 	}
-	if !strings.Contains(req.Email, "@") {
+	if !validEmail(req.Email) {
 		return echo.NewHTTPError(http.StatusBadRequest, "a valid email address is required")
 	}
 

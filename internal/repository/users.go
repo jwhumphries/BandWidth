@@ -7,6 +7,10 @@ import (
 )
 
 // IsDuplicate reports whether err is a unique-constraint violation.
+//
+// It matches SQLite's "UNIQUE constraint failed" message text because GORM's
+// SQLite drivers expose no structured constraint error codes; revisit if the
+// driver or SQLite changes its error format.
 func IsDuplicate(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed")
 }

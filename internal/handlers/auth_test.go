@@ -90,6 +90,8 @@ func TestSignupValidation(t *testing.T) {
 		{name: "short password", body: `{"username":"a","email":"a@b.c","password":"short"}`, want: 400},
 		{name: "missing username", body: `{"email":"a@b.c","password":"hunter2hunter2"}`, want: 400},
 		{name: "bad email", body: `{"username":"a","email":"nope","password":"hunter2hunter2"}`, want: 400},
+		{name: "bare at-sign email", body: `{"username":"a","email":"@","password":"hunter2hunter2"}`, want: 400},
+		{name: "missing domain email", body: `{"username":"a","email":"user@","password":"hunter2hunter2"}`, want: 400},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
