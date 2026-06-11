@@ -112,14 +112,16 @@ type Song struct {
 }
 
 // SongAnnotation holds one subject's status and notes for one song.
-// A missing row reads as StatusNotLearned with empty notes.
+// A missing row reads as StatusNotLearned with empty notes. Partial unique
+// indexes (per subject column) are required because SQLite treats NULLs as
+// distinct in plain composite unique indexes.
 type SongAnnotation struct {
-	ID        uint       `gorm:"primarykey"`
-	SongID    uint       `gorm:"uniqueIndex:idx_annotation_subject;not null"`
-	UserID    *uint      `gorm:"uniqueIndex:idx_annotation_subject"`
-	BandID    *uint      `gorm:"uniqueIndex:idx_annotation_subject"`
-	Status    SongStatus `gorm:"not null;default:not_learned"`
-	Notes     string
+	ID     uint  `gorm:"primarykey"`
+	SongID uint  `gorm:"not null;uniqueIndex:idx_annotation_user,where:user_id IS NOT NULL;uniqueIndex:idx_annotation_band,where:band_id IS NOT NULL"`
+	UserID *uint `gorm:"uniqueIndex:idx_annotation_user,where:user_id IS NOT NULL"`
+	BandID *uint `gorm:"uniqueIndex:idx_annotation_band,where:band_id IS NOT NULL"`
+	Status SongStatus `gorm:"not null;default:not_learned"`
+	Notes  string
 	UpdatedAt time.Time
 }
 
@@ -135,13 +137,15 @@ type Resource struct {
 }
 
 // PracticeEvent records "this song was practiced on this date" for one
-// subject. Date is YYYY-MM-DD; the unique index dedupes per day.
+// subject. Date is YYYY-MM-DD; per-subject partial unique indexes dedupe
+// per day (plain composite indexes don't fire when the other subject
+// column is NULL).
 type PracticeEvent struct {
 	ID     uint   `gorm:"primarykey"`
-	SongID uint   `gorm:"uniqueIndex:idx_practice_day;not null"`
-	UserID *uint  `gorm:"uniqueIndex:idx_practice_day"`
-	BandID *uint  `gorm:"uniqueIndex:idx_practice_day"`
-	Date   string `gorm:"uniqueIndex:idx_practice_day;not null"`
+	SongID uint   `gorm:"not null;uniqueIndex:idx_practice_user_day,where:user_id IS NOT NULL;uniqueIndex:idx_practice_band_day,where:band_id IS NOT NULL"`
+	UserID *uint  `gorm:"uniqueIndex:idx_practice_user_day,where:user_id IS NOT NULL"`
+	BandID *uint  `gorm:"uniqueIndex:idx_practice_band_day,where:band_id IS NOT NULL"`
+	Date   string `gorm:"not null;uniqueIndex:idx_practice_user_day,where:user_id IS NOT NULL;uniqueIndex:idx_practice_band_day,where:band_id IS NOT NULL"`
 }
 
 // Folder is a playlist-style, subject-owned ordered group of songs.

@@ -10,8 +10,9 @@ Design: [docs/superpowers/specs/2026-06-10-bandwidth-design.md](docs/superpowers
 
 Go + Echo + SQLite (GORM, CGO-free) backend; React 19 + TypeScript + Vite +
 Tailwind CSS/DaisyUI frontend with TanStack Query. Accounts with TOTP 2FA
-and optional SMTP password reset. Planned per the design doc: song and band
-tracking, installable PWA, single container on fly.io.
+and optional SMTP password reset. Personal song tracking (status, notes, links,
+practice days, folders) is implemented. Planned per the design doc: bands,
+installable PWA, single container on fly.io.
 
 ## Development
 

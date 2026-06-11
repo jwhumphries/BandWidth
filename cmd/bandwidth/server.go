@@ -130,6 +130,26 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	me.PATCH("", api.UpdateMe)
 	me.PUT("/password", api.ChangePassword)
 
+	songs := apiGroup.Group("/songs", appmw.RequireAuth(api.Repo))
+	songs.GET("", api.Songs)
+	songs.POST("", api.CreateSong)
+	songs.GET("/:id", api.Song)
+	songs.PATCH("/:id", api.UpdateSong)
+	songs.DELETE("/:id", api.DeleteSong)
+	songs.PUT("/:id/practice", api.LogPractice)
+	songs.DELETE("/:id/practice/:date", api.DeletePractice)
+	songs.POST("/:id/resources", api.CreateResource)
+	songs.PATCH("/:id/resources/:resourceId", api.UpdateResource)
+	songs.DELETE("/:id/resources/:resourceId", api.DeleteResource)
+
+	folders := apiGroup.Group("/folders", appmw.RequireAuth(api.Repo))
+	folders.GET("", api.Folders)
+	folders.POST("", api.CreateFolder)
+	folders.PUT("/order", api.ReorderFolders)
+	folders.PATCH("/:id", api.UpdateFolder)
+	folders.DELETE("/:id", api.DeleteFolder)
+	folders.PUT("/:id/entries", api.SetFolderEntries)
+
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
 		return nil, err
