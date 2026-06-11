@@ -1558,7 +1558,7 @@ func (a *API) Login(c *echo.Context) error {
 			})
 		}
 		code := strings.ToUpper(strings.TrimSpace(req.TOTPCode))
-		if !auth.ValidateTOTP(req.TOTPCode, user.TOTPSecret) &&
+		if !auth.ValidateTOTP(code, user.TOTPSecret) &&
 			!a.Repo.ConsumeBackupCode(user.ID, code) {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid two-factor code")
 		}
@@ -2385,7 +2385,7 @@ func (a *API) TwoFactorDisable(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
 	code := strings.ToUpper(strings.TrimSpace(req.Code))
-	if !auth.ValidateTOTP(req.Code, user.TOTPSecret) &&
+	if !auth.ValidateTOTP(code, user.TOTPSecret) &&
 		!a.Repo.ConsumeBackupCode(user.ID, code) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid two-factor code")
 	}
