@@ -118,3 +118,29 @@ func TestMeRequiresAuth(t *testing.T) {
 		t.Fatalf("status = %d, want 401", rec.Code)
 	}
 }
+
+func TestSongLibraryFlow(t *testing.T) {
+	e := testServer(t)
+
+	rec := do(e, http.MethodPost, "/api/auth/signup",
+		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`, nil)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("signup: %d", rec.Code)
+	}
+	cookies := rec.Result().Cookies()
+
+	rec = do(e, http.MethodPost, "/api/songs", `{"title":"Wonderwall","artist":"Oasis"}`, cookies)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create song: %d %s", rec.Code, rec.Body.String())
+	}
+
+	rec = do(e, http.MethodGet, "/api/songs", "", cookies)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Wonderwall") {
+		t.Fatalf("list: %d %s", rec.Code, rec.Body.String())
+	}
+
+	rec = do(e, http.MethodGet, "/api/folders", "", cookies)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("folders: %d", rec.Code)
+	}
+}
