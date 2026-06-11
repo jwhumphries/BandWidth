@@ -4236,6 +4236,17 @@ Login/signup/reset endpoints are rate limited (1 req/s, burst 5, per IP).
   `echo.New()` (no CSRF) via helpers in `internal/handlers/auth_test.go`.
 ```
 
+4. In the "Style guides & documented deviations" section, update the
+   `.golangci.yml` bullet (it currently mentions only the `version` package)
+   to:
+
+```markdown
+- **`.golangci.yml` adds narrow exclusions** to the canonical config:
+  revive's var-naming rule flags packages whose names collide with stdlib
+  packages; `version` (go/version) and `mail` (net/mail) are intentional
+  names mirroring the maintainer's other apps, excluded by path + text.
+```
+
 - [ ] **Step 2: Update `README.md`**
 
 Replace the Stack section body with:
