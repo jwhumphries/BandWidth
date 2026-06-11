@@ -14,7 +14,7 @@
 
 - Repo root: `/Users/john/code/git/BandWidth`, branch off `main` (e.g. `auth-and-profile`).
 - Echo v5 API facts (verified against v5.1.1 — do not "fix" these to v4 idioms): handlers are `func(c *echo.Context) error`; `c.Bind(&v)`, `c.Set/Get`, `c.SetCookie`, `c.NoContent` all exist; `middleware.CSRFConfig{...}.ToMiddleware()` returns `(echo.MiddlewareFunc, error)`; the CSRF middleware honors `Sec-Fetch-Site` headers; rate limiting via `middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{Rate, Burst, ExpiresIn}))`.
-- Go checks during development may run on the host (`go test ./...`); each task's final verification before commit is host-level, and `just check` gates Tasks 8, 11, and 14.
+- All verification runs through `just` recipes (inside Dagger): `just test` for Go tests, `just lint-go`, `just test-frontend`, `just typecheck`, `just lint-js`, `just format-check`, and `just check` as the full gate (Tasks 8, 11, 14). Host commands are limited to dependency management (`go get`, `go mod tidy`, `bun add`) and the dev-loop/manual smoke steps that are host-side by design. Where a task body below says `go test ./...` or `bun run test`, read it as `just test` / `just test-frontend`.
 - Frontend deps are installed with bun at latest (`bun add ...`).
 - JSON error responses come from Echo's default error handler (`{"message": "..."}`); handlers return `echo.NewHTTPError(code, message)`.
 - Spec deviation (approved during planning): no `BANDWIDTH_COOKIE_SECRET` — sessions are opaque 256-bit random tokens stored hashed in the DB, so no cookie signing is needed.
@@ -1558,7 +1558,7 @@ func (a *API) Login(c *echo.Context) error {
 			})
 		}
 		code := strings.ToUpper(strings.TrimSpace(req.TOTPCode))
-		if !auth.ValidateTOTP(req.TOTPCode, user.TOTPSecret) &&
+		if !auth.ValidateTOTP(code, user.TOTPSecret) &&
 			!a.Repo.ConsumeBackupCode(user.ID, code) {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid two-factor code")
 		}
@@ -2385,7 +2385,7 @@ func (a *API) TwoFactorDisable(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
 	code := strings.ToUpper(strings.TrimSpace(req.Code))
-	if !auth.ValidateTOTP(req.Code, user.TOTPSecret) &&
+	if !auth.ValidateTOTP(code, user.TOTPSecret) &&
 		!a.Repo.ConsumeBackupCode(user.ID, code) {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid two-factor code")
 	}
@@ -4234,6 +4234,17 @@ Login/signup/reset endpoints are rate limited (1 req/s, burst 5, per IP).
 - Repository tests run against in-memory SQLite (`repository.Open(":memory:")`,
   fresh DB per test). Handler tests register routes directly on a bare
   `echo.New()` (no CSRF) via helpers in `internal/handlers/auth_test.go`.
+```
+
+4. In the "Style guides & documented deviations" section, update the
+   `.golangci.yml` bullet (it currently mentions only the `version` package)
+   to:
+
+```markdown
+- **`.golangci.yml` adds narrow exclusions** to the canonical config:
+  revive's var-naming rule flags packages whose names collide with stdlib
+  packages; `version` (go/version) and `mail` (net/mail) are intentional
+  names mirroring the maintainer's other apps, excluded by path + text.
 ```
 
 - [ ] **Step 2: Update `README.md`**

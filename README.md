@@ -8,9 +8,10 @@ Design: [docs/superpowers/specs/2026-06-10-bandwidth-design.md](docs/superpowers
 
 ## Stack
 
-Go + Echo backend with React 19 + TypeScript + Vite + Tailwind CSS/DaisyUI
-frontend. Planned per the design doc: SQLite (GORM) persistence, installable
-PWA, single container on fly.io.
+Go + Echo + SQLite (GORM, CGO-free) backend; React 19 + TypeScript + Vite +
+Tailwind CSS/DaisyUI frontend with TanStack Query. Accounts with TOTP 2FA
+and optional SMTP password reset. Planned per the design doc: song and band
+tracking, installable PWA, single container on fly.io.
 
 ## Development
 

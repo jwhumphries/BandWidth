@@ -1,34 +1,30 @@
-import {render, screen, waitFor} from '@testing-library/react';
+import {screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {renderWithProviders} from '../test/utils';
 import HomePage from './HomePage';
 
 describe('HomePage', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue({ok: true} as unknown as Response),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            id: 1,
+            username: 'alice',
+            email: 'a@b.c',
+            totpEnabled: false,
+          }),
+          {status: 200},
+        ),
+      ),
     );
   });
 
-  it('renders the app name', () => {
-    render(<HomePage />);
-    expect(
-      screen.getByRole('heading', {name: /bandwidth/i}),
-    ).toBeInTheDocument();
-  });
-
-  it('shows server online once the health check resolves', async () => {
-    render(<HomePage />);
+  it('greets the logged-in user', async () => {
+    renderWithProviders(<HomePage />);
     await waitFor(() =>
-      expect(screen.getByText(/server online/i)).toBeInTheDocument(),
-    );
-  });
-
-  it('shows server unreachable when the health check fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('down')));
-    render(<HomePage />);
-    await waitFor(() =>
-      expect(screen.getByText(/server unreachable/i)).toBeInTheDocument(),
+      expect(screen.getByText(/welcome, alice/i)).toBeInTheDocument(),
     );
   });
 });

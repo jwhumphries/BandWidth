@@ -16,6 +16,9 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/jwhumphries/bandwidth/internal/handlers"
+	"github.com/jwhumphries/bandwidth/internal/mail"
+	appmw "github.com/jwhumphries/bandwidth/internal/middleware"
+	"github.com/jwhumphries/bandwidth/internal/repository"
 	"github.com/jwhumphries/bandwidth/internal/static"
 	"github.com/jwhumphries/bandwidth/version"
 )
@@ -23,9 +26,40 @@ import (
 func runServer() error {
 	logger := newLogger(viper.GetString("log_level"))
 
+	repo, err := repository.Open(viper.GetString("db_path"))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := repo.Close(); err != nil {
+			logger.Error("closing database", "error", err)
+		}
+	}()
+	mailer := mail.New(mail.Config{
+		Host: viper.GetString("smtp_host"),
+		Port: viper.GetInt("smtp_port"),
+		User: viper.GetString("smtp_user"),
+		Pass: viper.GetString("smtp_pass"),
+		From: viper.GetString("smtp_from"),
+	})
+	if mailer.Enabled() {
+		logger.Info("smtp configured, password reset enabled")
+	}
+	api := &handlers.API{
+		Repo:          repo,
+		Mailer:        mailer,
+		Logger:        logger,
+		BaseURL:       viper.GetString("base_url"),
+		SecureCookies: viper.GetBool("secure_cookies"),
+	}
+
+	e, err := newEcho(logger, api)
+	if err != nil {
+		return err
+	}
 	srv := &http.Server{
 		Addr:              viper.GetString("port"),
-		Handler:           newEcho(logger),
+		Handler:           e,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -52,19 +86,56 @@ func runServer() error {
 	return srv.Shutdown(shutdownCtx)
 }
 
-func newEcho(logger *slog.Logger) *echo.Echo {
+func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	e := echo.New()
+	// fly.io's edge proxy appends the real client IP to X-Forwarded-For;
+	// the default legacy extractor trusts the leftmost (spoofable) entry.
+	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 	e.Use(middleware.Recover())
 	e.Use(requestLogger(logger))
 
 	e.GET("/healthz", handlers.Healthz)
 
+	csrfMW, err := middleware.CSRFConfig{
+		CookiePath:     "/",
+		CookieSameSite: http.SameSiteLaxMode,
+		CookieSecure:   api.SecureCookies,
+	}.ToMiddleware()
+	if err != nil {
+		return nil, err
+	}
+
+	apiGroup := e.Group("/api", csrfMW)
+
+	// One shared store across signup/login/reset: a NAT'd office burns the
+	// burst faster, but the 1 rps refill keeps the window short.
+	authLimiter := middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(
+		middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 5, ExpiresIn: 3 * time.Minute},
+	))
+	authGroup := apiGroup.Group("/auth")
+	authGroup.POST("/signup", api.Signup, authLimiter)
+	authGroup.POST("/login", api.Login, authLimiter)
+	authGroup.POST("/logout", api.Logout)
+	authGroup.GET("/features", api.Features)
+	authGroup.POST("/password-reset", api.RequestPasswordReset, authLimiter)
+	authGroup.POST("/password-reset/confirm", api.ConfirmPasswordReset, authLimiter)
+
+	twofa := apiGroup.Group("/auth/2fa", appmw.RequireAuth(api.Repo))
+	twofa.POST("/setup", api.TwoFactorSetup)
+	twofa.POST("/verify", api.TwoFactorVerify)
+	twofa.POST("/disable", api.TwoFactorDisable)
+
+	me := apiGroup.Group("/me", appmw.RequireAuth(api.Repo))
+	me.GET("", api.Me)
+	me.PATCH("", api.UpdateMe)
+	me.PUT("/password", api.ChangePassword)
+
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
-		panic(err) // embed is checked at compile time; this cannot fail
+		return nil, err
 	}
 	handlers.RegisterSPA(e, dist)
-	return e
+	return e, nil
 }
 
 func newLogger(level string) *slog.Logger {
