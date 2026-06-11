@@ -75,6 +75,10 @@ func (a *API) UpdateResource(c *echo.Context) error {
 	if user == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
 	}
+	sid, err := songID(c)
+	if err != nil {
+		return err
+	}
 	rid, err := resourceID(c)
 	if err != nil {
 		return err
@@ -89,7 +93,7 @@ func (a *API) UpdateResource(c *echo.Context) error {
 	if req.Label != nil && len(*req.Label) > maxTitleLen {
 		return echo.NewHTTPError(http.StatusBadRequest, "label too long")
 	}
-	res, err := a.Repo.UpdateResource(rid, user.ID, req.URL, req.Label)
+	res, err := a.Repo.UpdateResource(rid, sid, user.ID, req.URL, req.Label)
 	if err != nil {
 		return notFoundOr(err, "resource")
 	}
@@ -102,11 +106,15 @@ func (a *API) DeleteResource(c *echo.Context) error {
 	if user == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
 	}
+	sid, err := songID(c)
+	if err != nil {
+		return err
+	}
 	rid, err := resourceID(c)
 	if err != nil {
 		return err
 	}
-	if err := a.Repo.DeleteResource(rid, user.ID); err != nil {
+	if err := a.Repo.DeleteResource(rid, sid, user.ID); err != nil {
 		return notFoundOr(err, "resource")
 	}
 	return c.NoContent(http.StatusNoContent)

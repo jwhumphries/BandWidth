@@ -35,10 +35,10 @@ func (r *Repo) CreateResource(songID, userID uint, url, label string) (*model.Re
 	return res, nil
 }
 
-// resourceForUser loads a resource only when it belongs to the user.
-func (r *Repo) resourceForUser(resourceID, userID uint) (*model.Resource, error) {
+// resourceForUser loads a resource only when it belongs to the user and song.
+func (r *Repo) resourceForUser(resourceID, songID, userID uint) (*model.Resource, error) {
 	var res model.Resource
-	err := r.db.Where("id = ? AND user_id = ?", resourceID, userID).
+	err := r.db.Where("id = ? AND song_id = ? AND user_id = ?", resourceID, songID, userID).
 		First(&res).Error
 	if err != nil {
 		return nil, err
@@ -47,8 +47,8 @@ func (r *Repo) resourceForUser(resourceID, userID uint) (*model.Resource, error)
 }
 
 // UpdateResource applies any provided fields to the user's resource.
-func (r *Repo) UpdateResource(resourceID, userID uint, url, label *string) (*model.Resource, error) {
-	res, err := r.resourceForUser(resourceID, userID)
+func (r *Repo) UpdateResource(resourceID, songID, userID uint, url, label *string) (*model.Resource, error) {
+	res, err := r.resourceForUser(resourceID, songID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +65,8 @@ func (r *Repo) UpdateResource(resourceID, userID uint, url, label *string) (*mod
 }
 
 // DeleteResource removes the user's resource.
-func (r *Repo) DeleteResource(resourceID, userID uint) error {
-	res, err := r.resourceForUser(resourceID, userID)
+func (r *Repo) DeleteResource(resourceID, songID, userID uint) error {
+	res, err := r.resourceForUser(resourceID, songID, userID)
 	if err != nil {
 		return err
 	}

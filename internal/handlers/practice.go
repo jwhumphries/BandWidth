@@ -10,7 +10,7 @@ import (
 )
 
 // validPracticeDate parses a YYYY-MM-DD date and rejects far-future entries
-// (one day of slack absorbs timezone differences with the client).
+// (48 hours of slack absorbs timezone differences with the client).
 func validPracticeDate(date string) bool {
 	parsed, err := time.Parse("2006-01-02", date)
 	if err != nil {

@@ -25,12 +25,12 @@ func TestResourceLifecycle(t *testing.T) {
 	}
 
 	url := "https://example.com/tab2"
-	updated, err := repo.UpdateResource(first.ID, user.ID, &url, nil)
+	updated, err := repo.UpdateResource(first.ID, song.ID, user.ID, &url, nil)
 	if err != nil || updated.URL != url || updated.Label != "tab" {
 		t.Fatalf("UpdateResource: %+v (%v)", updated, err)
 	}
 
-	if err := repo.DeleteResource(first.ID, user.ID); err != nil {
+	if err := repo.DeleteResource(first.ID, song.ID, user.ID); err != nil {
 		t.Fatalf("DeleteResource: %v", err)
 	}
 	list, _ = repo.ResourcesForSongUser(song.ID, user.ID)
@@ -46,10 +46,15 @@ func TestResourceSubjectIsolation(t *testing.T) {
 	song, _ := repo.CreateSong(alice.ID, "Wonderwall", "Oasis")
 	res, _ := repo.CreateResource(song.ID, alice.ID, "https://example.com", "x")
 
-	if _, err := repo.UpdateResource(res.ID, bob.ID, nil, nil); err == nil {
+	if _, err := repo.UpdateResource(res.ID, song.ID, bob.ID, nil, nil); err == nil {
 		t.Error("non-owner updated resource")
 	}
-	if err := repo.DeleteResource(res.ID, bob.ID); err == nil {
+	if err := repo.DeleteResource(res.ID, song.ID, bob.ID); err == nil {
 		t.Error("non-owner deleted resource")
+	}
+
+	// Mismatched songID should also reject.
+	if _, err := repo.UpdateResource(res.ID, 9999, alice.ID, nil, nil); err == nil {
+		t.Error("mismatched songID updated resource")
 	}
 }

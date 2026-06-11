@@ -121,6 +121,15 @@ func TestResourceEndpoints(t *testing.T) {
 		t.Fatalf("update resource: %d %s", rec.Code, rec.Body.String())
 	}
 
+	// The resource must belong to the song in the URL.
+	other := createSongFor(t, e, cookie)
+	rec = jsonReq(e, http.MethodPatch,
+		fmt.Sprintf("/api/songs/%d/resources/%d", other, res.ID),
+		`{"label":"nope"}`, cookie)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("mismatched song patch: %d, want 404", rec.Code)
+	}
+
 	rec = jsonReq(e, http.MethodDelete,
 		fmt.Sprintf("/api/songs/%d/resources/%d", id, res.ID), "", cookie)
 	if rec.Code != http.StatusNoContent {
