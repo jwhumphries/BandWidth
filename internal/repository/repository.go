@@ -41,6 +41,12 @@ func Open(path string) (*Repo, error) {
 		&model.Session{},
 		&model.BackupCode{},
 		&model.PasswordReset{},
+		&model.Song{},
+		&model.SongAnnotation{},
+		&model.Resource{},
+		&model.PracticeEvent{},
+		&model.Folder{},
+		&model.FolderEntry{},
 	); err != nil {
 		if sqlDB, dbErr := db.DB(); dbErr == nil {
 			_ = sqlDB.Close()
