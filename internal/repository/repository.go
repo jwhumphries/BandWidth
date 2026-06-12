@@ -47,6 +47,9 @@ func Open(path string) (*Repo, error) {
 		&model.PracticeEvent{},
 		&model.Folder{},
 		&model.FolderEntry{},
+		&model.Band{},
+		&model.BandMember{},
+		&model.BandInvite{},
 	); err != nil {
 		if sqlDB, dbErr := db.DB(); dbErr == nil {
 			_ = sqlDB.Close()
