@@ -51,3 +51,49 @@ export interface Folder {
   position: number;
   songIds: number[];
 }
+
+export type BandRole = 'viewer' | 'editor' | 'admin';
+
+export interface BandSummary {
+  id: number;
+  name: string;
+  role: BandRole;
+  memberCount: number;
+}
+
+export interface BandMemberInfo {
+  userId: number;
+  username: string;
+  role: BandRole;
+}
+
+export interface BandDetail {
+  id: number;
+  name: string;
+  creatorId: number;
+  myRole: BandRole;
+  members: BandMemberInfo[];
+}
+
+export interface MyInvite {
+  id: number;
+  bandId: number;
+  bandName: string;
+  role: BandRole;
+}
+
+export interface BandInviteInfo {
+  id: number;
+  role: BandRole;
+  invitedUsername: string | null;
+  isLink: boolean;
+  expiresAt: string;
+}
+
+export interface CreatedInvite {
+  id?: number;
+  role: BandRole;
+  invitedUsername?: string;
+  token?: string;
+  isLink?: boolean;
+}
