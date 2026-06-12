@@ -53,12 +53,12 @@ func (a *API) CreateInvite(c *echo.Context) error {
 	}
 
 	if req.Link {
-		token, err := a.Repo.CreateLinkInvite(bandID, role, user.ID)
+		invite, token, err := a.Repo.CreateLinkInvite(bandID, role, user.ID)
 		if err != nil {
 			return err
 		}
 		return c.JSON(http.StatusCreated, map[string]any{
-			"role": role, "token": token, "isLink": true,
+			"id": invite.ID, "role": role, "token": token, "isLink": true,
 		})
 	}
 

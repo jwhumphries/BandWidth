@@ -73,7 +73,7 @@ func (r *Repo) CreateDirectInvite(bandID, invitedUserID uint, role model.BandRol
 }
 
 // CreateLinkInvite creates a multi-use share link and returns its raw token.
-func (r *Repo) CreateLinkInvite(bandID uint, role model.BandRole, createdBy uint) (string, error) {
+func (r *Repo) CreateLinkInvite(bandID uint, role model.BandRole, createdBy uint) (*model.BandInvite, string, error) {
 	token := auth.NewToken()
 	hash := auth.HashToken(token)
 	invite := &model.BandInvite{
@@ -84,9 +84,9 @@ func (r *Repo) CreateLinkInvite(bandID uint, role model.BandRole, createdBy uint
 		CreatedBy: createdBy,
 	}
 	if err := r.db.Create(invite).Error; err != nil {
-		return "", err
+		return nil, "", err
 	}
-	return token, nil
+	return invite, token, nil
 }
 
 // PendingInvitesForUser lists a user's incoming pending invites.

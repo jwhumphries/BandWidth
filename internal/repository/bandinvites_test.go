@@ -90,7 +90,7 @@ func TestLinkInviteLifecycle(t *testing.T) {
 	repo, alice, bob, band := inviteFixture(t)
 	carol, _ := repo.CreateUser("carol", "carol@example.com", "h")
 
-	token, err := repo.CreateLinkInvite(band.ID, model.RoleViewer, alice.ID)
+	_, token, err := repo.CreateLinkInvite(band.ID, model.RoleViewer, alice.ID)
 	if err != nil || token == "" {
 		t.Fatalf("CreateLinkInvite: %q, %v", token, err)
 	}
