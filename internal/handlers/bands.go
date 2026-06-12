@@ -122,6 +122,9 @@ func (a *API) DeleteBand(c *echo.Context) error {
 		return err
 	}
 	user := appmw.CurrentUser(c)
+	if user == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
 	band, err := a.Repo.BandByID(id)
 	if err != nil {
 		return notFoundOr(err, "band")

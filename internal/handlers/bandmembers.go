@@ -61,6 +61,9 @@ func (a *API) RemoveMember(c *echo.Context) error {
 		return err
 	}
 	user := appmw.CurrentUser(c)
+	if user == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
 	targetID, err := memberID(c)
 	if err != nil {
 		return err

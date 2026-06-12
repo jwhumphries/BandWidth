@@ -39,6 +39,9 @@ func (a *API) CreateInvite(c *echo.Context) error {
 		return err
 	}
 	user := appmw.CurrentUser(c)
+	if user == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
 	var req createInviteRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
