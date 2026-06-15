@@ -29,7 +29,7 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 - `cmd/bandwidth/` — Cobra entry point, Viper config (`BANDWIDTH_*` env
   vars), Echo server wiring, graceful shutdown
 - `internal/handlers/` — HTTP handlers (healthz, SPA fallback, auth,
-  account, 2FA, password reset, songs, practice, resources, folders, bands, members, invites, band songs, band rehearsals/resources) sharing one `API` dependency struct
+  account, 2FA, password reset, songs, practice, resources, folders, bands, members, invites, band songs, band rehearsals/resources, band folders) sharing one `API` dependency struct; band folder handlers live in `internal/handlers/bandfolders.go`
 - `internal/static/` — `go:embed` of the frontend build; locally only a
   placeholder, populated inside the Dagger release build
 - `internal/model/` — persisted domain types (User, Session, BackupCode,
@@ -37,7 +37,8 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 - `internal/repository/` — GORM/SQLite persistence (`Repo` struct; CGO-free
   driver `ncruces/go-sqlite3` via gormlite, WAL mode, AutoMigrate at startup);
   `bandsongs.go` houses the conversion engine; `subject.go` defines the `subj`
-  value backing user- and band-keyed metadata methods
+  value backing user- and band-keyed metadata methods; `folders.go` is
+  owner-keyed via the `subj.ownerScope()` helper in `subject.go`
 - `internal/auth/` — argon2id hashing, random tokens, TOTP, backup codes
 - `internal/middleware/` — `RequireAuth` session middleware (import-aliased
   `appmw` where Echo's middleware package is also imported)
@@ -97,8 +98,18 @@ view. When a member loses access to a band song (they leave or are removed,
 the band deletes the song, or the band is deleted), any personal rows they
 have on it are re-pointed onto a freshly created personal-copy song (the
 band layer is not copied); untouched band songs simply leave their library.
-All conversion runs in the same transaction as the removal. Band folders
-arrive in the bands-folders plan.
+All conversion runs in the same transaction as the removal.
+
+Bands have playlist-style folders too: band-owned (`owner_band_id`) folders
+that hold the band's songs, managed only from the band view by Editors/Admins
+and read by Viewers. Folder methods are written once against the `subj`
+value's `ownerScope()` and exposed as user- and band-keyed methods. A member's
+personal folders may also hold any song visible to them, including band songs
+surfaced by interleaving. When a member loses access to a band song, their
+personal folder placements are re-pointed onto the personal copy alongside
+their other personal rows (a personal folder entry alone now counts as
+personal work worth preserving); band folder entries are removed with the
+band song.
 
 ## Style guides & documented deviations
 

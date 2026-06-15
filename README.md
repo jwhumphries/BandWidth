@@ -11,10 +11,11 @@ Design: [docs/superpowers/specs/2026-06-10-bandwidth-design.md](docs/superpowers
 Go + Echo + SQLite (GORM, CGO-free) backend; React 19 + TypeScript + Vite +
 Tailwind CSS/DaisyUI frontend with TanStack Query. Accounts with TOTP 2FA
 and optional SMTP password reset. Personal song tracking (status, notes, links,
-practice days, folders) is implemented. Bands with roles, invites, and shared
-songs (band metadata layer, personal-view interleaving, and a conversion engine
-that preserves members' work on leave/delete) are implemented. Planned per the
-design doc: band folders, installable PWA, single container on fly.io.
+practice days, folders) is implemented. Bands with roles, invites, shared
+songs, and band folders (with personal-folder cross-inclusion and a conversion
+engine that preserves members' work and folder placements on leave/delete) are
+implemented. Planned per the design doc: installable PWA, single container on
+fly.io.
 
 ## Development
 
