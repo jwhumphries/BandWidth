@@ -86,3 +86,59 @@ describe('SongPage', () => {
     await waitFor(() => expect(screen.getByText('home')).toBeInTheDocument());
   });
 });
+
+describe('SongPage band song', () => {
+  const bandDetail = {
+    id: 2,
+    title: 'Shared Tune',
+    artist: 'The Band',
+    status: 'not_learned',
+    notes: '',
+    resources: [],
+    lastPracticedAt: '',
+    practiceCount: 0,
+    band: {
+      bandId: 7,
+      bandName: 'The Quietones',
+      status: 'nailed',
+      notes: 'band notes here',
+      resources: [{id: 1, url: 'https://example.com/band', label: 'band tab'}],
+      lastRehearsedAt: '2026-06-10',
+      rehearsalCount: 9,
+    },
+  };
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify(bandDetail), {status: 200}),
+        ),
+    );
+  });
+
+  function renderBandSong() {
+    return renderWithProviders(
+      <Routes>
+        <Route path="/songs/:id" element={<SongPage />} />
+        <Route path="/" element={<p>home</p>} />
+      </Routes>,
+      {route: '/songs/2'},
+    );
+  }
+
+  it('shows the read-only band section and locks identity', async () => {
+    renderBandSong();
+    expect(await screen.findByText(/The Quietones/)).toBeInTheDocument();
+    expect(screen.getByText(/band notes here/)).toBeInTheDocument();
+    expect(screen.getByText(/9 rehearsals/i)).toBeInTheDocument();
+    // The title input is disabled (band owns identity).
+    expect(screen.getByLabelText(/title/i)).toBeDisabled();
+    // No delete control for band songs in the personal view.
+    expect(
+      screen.queryByRole('button', {name: /delete song/i}),
+    ).not.toBeInTheDocument();
+  });
+});

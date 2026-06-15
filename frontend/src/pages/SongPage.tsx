@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
+import BandSection from '../components/songs/BandSection';
 import ConfirmModal from '../components/songs/ConfirmModal';
 import ResourceList from '../components/songs/ResourceList';
 import FolderPicker from '../components/folders/FolderPicker';
@@ -67,6 +68,8 @@ export default function SongPage() {
     );
   }
 
+  const isBandSong = song.band !== undefined;
+
   const save = (e: FormEvent) => {
     e.preventDefault();
     updateSong.mutate(
@@ -91,6 +94,7 @@ export default function SongPage() {
               setTitle(e.target.value);
             }}
             required
+            disabled={isBandSong}
           />
           <label className="label" htmlFor="artist">
             Artist
@@ -103,6 +107,7 @@ export default function SongPage() {
               setDirty(true);
               setArtist(e.target.value);
             }}
+            disabled={isBandSong}
           />
           <label className="label" htmlFor="status">
             Status
@@ -145,6 +150,8 @@ export default function SongPage() {
           </div>
         </div>
       </form>
+
+      {song.band && <BandSection band={song.band} />}
 
       <section className="card bg-base-100 shadow">
         <div className="card-body">
@@ -202,19 +209,21 @@ export default function SongPage() {
         </div>
       </section>
 
-      <section className="card bg-base-100 shadow">
-        <div className="card-body">
-          <h2 className="card-title">Danger zone</h2>
-          <div className="card-actions">
-            <button
-              className="btn btn-error btn-outline"
-              onClick={() => setConfirming(true)}
-            >
-              Delete song
-            </button>
+      {!isBandSong && (
+        <section className="card bg-base-100 shadow">
+          <div className="card-body">
+            <h2 className="card-title">Danger zone</h2>
+            <div className="card-actions">
+              <button
+                className="btn btn-error btn-outline"
+                onClick={() => setConfirming(true)}
+              >
+                Delete song
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <ConfirmModal
         open={confirming}
