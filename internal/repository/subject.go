@@ -21,3 +21,13 @@ func (s subj) scope() (string, uint) {
 	}
 	return "band_id = ? AND user_id IS NULL", *s.bandID
 }
+
+// ownerScope filters owner-keyed tables (folders) to this subject, requiring
+// the other owner column to be NULL so a user filter never matches a band row
+// and vice versa.
+func (s subj) ownerScope() (string, uint) {
+	if s.userID != nil {
+		return "owner_user_id = ? AND owner_band_id IS NULL", *s.userID
+	}
+	return "owner_band_id = ? AND owner_user_id IS NULL", *s.bandID
+}
