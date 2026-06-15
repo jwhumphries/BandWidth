@@ -1,3 +1,4 @@
+import BandsCard from '../components/bands/BandsCard';
 import AccountSettings from '../components/profile/AccountSettings';
 import PasswordSettings from '../components/profile/PasswordSettings';
 import TwoFactorSettings from '../components/profile/TwoFactorSettings';
@@ -9,6 +10,7 @@ export default function ProfilePage() {
       <AccountSettings />
       <PasswordSettings />
       <TwoFactorSettings />
+      <BandsCard />
     </div>
   );
 }
