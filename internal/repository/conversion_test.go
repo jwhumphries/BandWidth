@@ -6,6 +6,46 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
+func TestConversionPreservesPersonalFolderPlacement(t *testing.T) {
+	repo := testRepo(t)
+	aliceUser, _ := repo.CreateUser("alice", "alice@example.com", "h")
+	alice := aliceUser.ID
+	aliceBand, _ := repo.CreateBand(alice, "The Quietones")
+	band := aliceBand.ID
+	bandSong, err := repo.CreateBandSong(band, "Wonderwall", "Oasis")
+	if err != nil {
+		t.Fatalf("create band song: %v", err)
+	}
+
+	// Alice's ONLY personal work on the band song is foldering it.
+	folder, _ := repo.CreateFolder(alice, "Faves")
+	if err := repo.SetFolderEntries(folder.ID, alice, []uint{bandSong.ID}); err != nil {
+		t.Fatalf("set entries: %v", err)
+	}
+
+	// Deleting the band song converts Alice's placement onto a personal copy.
+	if err := repo.DeleteBandSong(bandSong.ID, band); err != nil {
+		t.Fatalf("delete band song: %v", err)
+	}
+
+	folders, _ := repo.FoldersForUser(alice)
+	if len(folders) != 1 || len(folders[0].SongIDs) != 1 {
+		t.Fatalf("folder after conversion = %+v", folders)
+	}
+	newSongID := folders[0].SongIDs[0]
+	if newSongID == bandSong.ID {
+		t.Fatalf("folder still points at the deleted band song %d", bandSong.ID)
+	}
+	// The re-pointed song is Alice's personal copy.
+	personal, err := repo.SongForUser(newSongID, alice)
+	if err != nil {
+		t.Fatalf("personal copy not found: %v", err)
+	}
+	if personal.OwnerUserID == nil || *personal.OwnerUserID != alice || personal.Title != "Wonderwall" {
+		t.Fatalf("personal copy = %+v", personal)
+	}
+}
+
 // touchPersonalLayer gives the user some personal data on a band song.
 func touchPersonalLayer(t *testing.T, repo *Repo, songID, userID uint) {
 	t.Helper()
