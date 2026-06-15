@@ -1,4 +1,6 @@
+import {useState} from 'react';
 import {Link, useParams} from 'react-router';
+import BandFolderSidebar from '../components/bands/BandFolderSidebar';
 import BandSettings from '../components/bands/BandSettings';
 import BandSongList from '../components/bands/BandSongList';
 import InviteManager from '../components/bands/InviteManager';
@@ -9,6 +11,7 @@ export default function BandPage() {
   const {id: idParam} = useParams();
   const id = Number(idParam);
   const {data: band, isPending, isError, error, refetch} = useBand(id);
+  const [folderId, setFolderId] = useState<number | null>(null);
 
   if (isPending) {
     return (
@@ -34,10 +37,25 @@ export default function BandPage() {
   }
 
   const isAdmin = band.myRole === 'admin';
+  const canEdit = band.myRole !== 'viewer';
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">{band.name}</h1>
-      <BandSongList bandId={band.id} canEdit={band.myRole !== 'viewer'} />
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <BandFolderSidebar
+          bandId={band.id}
+          canEdit={canEdit}
+          selectedId={folderId}
+          onSelect={setFolderId}
+        />
+        <div className="flex-1">
+          <BandSongList
+            bandId={band.id}
+            canEdit={canEdit}
+            folderId={folderId}
+          />
+        </div>
+      </div>
       <MemberList band={band} />
       {isAdmin && <InviteManager bandId={band.id} />}
       {isAdmin && <BandSettings band={band} />}
