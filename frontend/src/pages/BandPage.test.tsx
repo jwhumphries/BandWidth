@@ -35,6 +35,9 @@ function renderBandPage(myRole = 'admin') {
         if (url.includes('/invites')) {
           return Promise.resolve(jsonResponse(200, []));
         }
+        if (url.includes('/songs')) {
+          return Promise.resolve(jsonResponse(200, []));
+        }
         if (init?.method === 'PATCH' || init?.method === 'DELETE') {
           return Promise.resolve(new Response(null, {status: 204}));
         }
