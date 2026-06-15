@@ -51,8 +51,10 @@ export function useSetMemberRole(bandId: number) {
   return useMutation<void, ApiError, {userId: number; role: BandRole}>({
     mutationFn: ({userId, role}) =>
       api.patch<void>(`/api/bands/${bandId}/members/${userId}`, {role}),
-    onSuccess: () =>
-      void queryClient.invalidateQueries({queryKey: ['bands', bandId]}),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({queryKey: ['bands', bandId]});
+      void queryClient.invalidateQueries({queryKey: ['bands'], exact: true});
+    },
   });
 }
 
