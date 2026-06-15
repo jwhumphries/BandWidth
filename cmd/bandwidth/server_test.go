@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -165,5 +167,34 @@ func TestBandLifecycleFlow(t *testing.T) {
 	rec = do(e, http.MethodGet, "/api/invites", "", alice)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("my invites: %d", rec.Code)
+	}
+}
+
+func TestBandSongInterleaveFlow(t *testing.T) {
+	e := testServer(t)
+
+	rec := do(e, http.MethodPost, "/api/auth/signup",
+		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`, nil)
+	alice := rec.Result().Cookies()
+
+	rec = do(e, http.MethodPost, "/api/bands", `{"name":"The Quietones"}`, alice)
+	var band struct {
+		ID uint `json:"id"`
+	}
+	_ = json.Unmarshal(rec.Body.Bytes(), &band)
+
+	rec = do(e, http.MethodPost, fmt.Sprintf("/api/bands/%d/songs", band.ID),
+		`{"title":"Wonderwall","artist":"Oasis"}`, alice)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create band song: %d %s", rec.Code, rec.Body.String())
+	}
+
+	// The band song shows up in alice's personal library.
+	rec = do(e, http.MethodGet, "/api/songs", "", alice)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Wonderwall") {
+		t.Fatalf("personal library: %d %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "bandId") {
+		t.Fatalf("band song not tagged in personal library: %s", rec.Body.String())
 	}
 }
