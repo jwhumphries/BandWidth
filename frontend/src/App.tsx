@@ -2,6 +2,7 @@ import {Route, Routes} from 'react-router';
 import Layout from './components/Layout';
 import RequireAuth from './components/RequireAuth';
 import BandPage from './pages/BandPage';
+import BandSongPage from './pages/BandSongPage';
 import BandsPage from './pages/BandsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import HomePage from './pages/HomePage';
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/songs/:id" element={<SongPage />} />
           <Route path="/bands" element={<BandsPage />} />
           <Route path="/bands/:id" element={<BandPage />} />
+          <Route path="/bands/:id/songs/:songId" element={<BandSongPage />} />
           <Route path="/join/:token" element={<JoinPage />} />
         </Route>
       </Route>
