@@ -23,7 +23,7 @@ func newInvitesAPI(t *testing.T) (*echo.Echo, *API) {
 	inv.GET("", api.MyInvites)
 	inv.POST("/:id/accept", api.AcceptInvite)
 	inv.POST("/:id/decline", api.DeclineInvite)
-	inv.POST("/link/:token", api.JoinByLink)
+	inv.POST("/link", api.JoinByLink)
 	return e, api
 }
 
@@ -88,7 +88,9 @@ func TestDirectInviteFlow(t *testing.T) {
 	var carolInvite struct {
 		ID uint `json:"id"`
 	}
-	_ = json.Unmarshal(rec.Body.Bytes(), &carolInvite)
+	if err := json.Unmarshal(rec.Body.Bytes(), &carolInvite); err != nil {
+		t.Fatalf("carol invite body: %s (%v)", rec.Body.String(), err)
+	}
 	if rec := jsonReq(e, http.MethodPost, fmt.Sprintf("/api/invites/%d/accept", carolInvite.ID), "", bob); rec.Code != http.StatusNotFound {
 		t.Fatalf("accept other's invite: %d, want 404", rec.Code)
 	}
@@ -119,7 +121,7 @@ func TestLinkInviteFlow(t *testing.T) {
 	}
 
 	// Join via the link.
-	rec = jsonReq(e, http.MethodPost, "/api/invites/link/"+link.Token, "", bob)
+	rec = jsonReq(e, http.MethodPost, "/api/invites/link", fmt.Sprintf(`{"token":%q}`, link.Token), bob)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("join: %d %s", rec.Code, rec.Body.String())
 	}
@@ -129,7 +131,7 @@ func TestLinkInviteFlow(t *testing.T) {
 	}
 
 	// Bad token 404s.
-	if rec := jsonReq(e, http.MethodPost, "/api/invites/link/bogus", "", bob); rec.Code != http.StatusNotFound {
+	if rec := jsonReq(e, http.MethodPost, "/api/invites/link", `{"token":"bogus"}`, bob); rec.Code != http.StatusNotFound {
 		t.Fatalf("bogus token: %d, want 404", rec.Code)
 	}
 
@@ -148,7 +150,7 @@ func TestLinkInviteFlow(t *testing.T) {
 		t.Fatalf("revoke: %d", rec.Code)
 	}
 	carol := signupAndCookie(t, e, "carol")
-	if rec := jsonReq(e, http.MethodPost, "/api/invites/link/"+link.Token, "", carol); rec.Code != http.StatusNotFound {
+	if rec := jsonReq(e, http.MethodPost, "/api/invites/link", fmt.Sprintf(`{"token":%q}`, link.Token), carol); rec.Code != http.StatusNotFound {
 		t.Fatalf("revoked link join: %d, want 404", rec.Code)
 	}
 }

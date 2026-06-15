@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 
 	appmw "github.com/jwhumphries/bandwidth/internal/middleware"
 	"github.com/jwhumphries/bandwidth/internal/model"
@@ -71,7 +72,10 @@ func (a *API) CreateInvite(c *echo.Context) error {
 	}
 	invitee, err := a.Repo.UserByLogin(username)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, "no such user")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.NewHTTPError(http.StatusNotFound, "no such user")
+		}
+		return err
 	}
 	invite, err := a.Repo.CreateDirectInvite(bandID, invitee.ID, role, user.ID)
 	switch {
@@ -168,11 +172,16 @@ func (a *API) JoinByLink(c *echo.Context) error {
 	if user == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
 	}
-	token := c.Param("token")
-	if token == "" {
+	var req struct {
+		Token string `json:"token"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
+	}
+	if req.Token == "" {
 		return echo.NewHTTPError(http.StatusNotFound, "invite not found")
 	}
-	bandID, err := a.Repo.JoinByLink(token, user.ID)
+	bandID, err := a.Repo.JoinByLink(req.Token, user.ID)
 	if err != nil {
 		return notFoundOr(err, "invite")
 	}

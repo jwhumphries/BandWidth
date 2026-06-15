@@ -48,6 +48,8 @@ func pendingInviteScope(db *gorm.DB) *gorm.DB {
 func (r *Repo) CreateDirectInvite(bandID, invitedUserID uint, role model.BandRole, createdBy uint) (*model.BandInvite, error) {
 	if _, err := r.MemberRole(bandID, invitedUserID); err == nil {
 		return nil, ErrAlreadyMember
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
 	}
 	var n int64
 	err := pendingInviteScope(r.db.Model(&model.BandInvite{})).
@@ -198,8 +200,13 @@ func (r *Repo) JoinByLink(token string, userID uint) (uint, error) {
 	}
 	if _, err := r.MemberRole(invite.BandID, userID); err == nil {
 		return invite.BandID, nil
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, err
 	}
 	if err := r.AddMember(invite.BandID, userID, invite.Role); err != nil {
+		if IsDuplicate(err) {
+			return invite.BandID, nil
+		}
 		return 0, err
 	}
 	return invite.BandID, nil

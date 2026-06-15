@@ -166,7 +166,7 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	invites.GET("", api.MyInvites)
 	invites.POST("/:id/accept", api.AcceptInvite)
 	invites.POST("/:id/decline", api.DeclineInvite)
-	invites.POST("/link/:token", api.JoinByLink)
+	invites.POST("/link", api.JoinByLink)
 
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {

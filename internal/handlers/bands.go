@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 
 	appmw "github.com/jwhumphries/bandwidth/internal/middleware"
 	"github.com/jwhumphries/bandwidth/internal/model"
@@ -24,7 +26,10 @@ func (a *API) bandAccess(c *echo.Context, minRole model.BandRole) (uint, model.B
 	}
 	role, err := a.Repo.MemberRole(id, user.ID)
 	if err != nil {
-		return 0, "", echo.NewHTTPError(http.StatusNotFound, "band not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, "", echo.NewHTTPError(http.StatusNotFound, "band not found")
+		}
+		return 0, "", err
 	}
 	if !role.AtLeast(minRole) {
 		return 0, "", echo.NewHTTPError(http.StatusForbidden, "insufficient role")
