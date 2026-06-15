@@ -27,6 +27,8 @@ export interface SongListItem {
   status: SongStatus;
   lastPracticedAt: string;
   practiceCount: number;
+  bandId?: number;
+  bandName?: string;
 }
 
 export interface Resource {
@@ -35,9 +37,31 @@ export interface Resource {
   label: string;
 }
 
+export interface BandLayer {
+  bandId: number;
+  bandName: string;
+  status: SongStatus;
+  notes: string;
+  resources: Resource[];
+  lastRehearsedAt: string;
+  rehearsalCount: number;
+}
+
 export interface SongDetail extends SongListItem {
   notes: string;
   resources: Resource[];
+  band?: BandLayer;
+}
+
+export interface BandSongDetail {
+  id: number;
+  title: string;
+  artist: string;
+  status: SongStatus;
+  notes: string;
+  resources: Resource[];
+  lastRehearsedAt: string;
+  rehearsalCount: number;
 }
 
 export interface PracticeStats {
