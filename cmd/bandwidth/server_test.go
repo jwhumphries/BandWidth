@@ -175,13 +175,21 @@ func TestBandSongInterleaveFlow(t *testing.T) {
 
 	rec := do(e, http.MethodPost, "/api/auth/signup",
 		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`, nil)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("signup: %d %s", rec.Code, rec.Body.String())
+	}
 	alice := rec.Result().Cookies()
 
 	rec = do(e, http.MethodPost, "/api/bands", `{"name":"The Quietones"}`, alice)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create band: %d %s", rec.Code, rec.Body.String())
+	}
 	var band struct {
 		ID uint `json:"id"`
 	}
-	_ = json.Unmarshal(rec.Body.Bytes(), &band)
+	if err := json.Unmarshal(rec.Body.Bytes(), &band); err != nil {
+		t.Fatalf("decode band: %v", err)
+	}
 
 	rec = do(e, http.MethodPost, fmt.Sprintf("/api/bands/%d/songs", band.ID),
 		`{"title":"Wonderwall","artist":"Oasis"}`, alice)

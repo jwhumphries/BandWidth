@@ -49,10 +49,13 @@ func TestBandRehearsalAndResources(t *testing.T) {
 		t.Errorf("rehearsal stats = %+v", stats)
 	}
 
-	// Empty body defaults to today.
+	// Empty body defaults to today. Capture the reference date just before the
+	// request so a UTC-midnight rollover between request and assertion can't
+	// flake the comparison.
+	today := time.Now().UTC().Format("2006-01-02")
 	rec = jsonReq(e, http.MethodPut, base+"/rehearsal", "{}", alice)
 	_ = json.Unmarshal(rec.Body.Bytes(), &stats)
-	if stats.LastRehearsedAt != time.Now().UTC().Format("2006-01-02") {
+	if stats.LastRehearsedAt != today {
 		t.Errorf("default date = %q", stats.LastRehearsedAt)
 	}
 

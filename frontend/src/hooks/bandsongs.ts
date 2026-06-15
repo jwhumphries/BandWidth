@@ -1,6 +1,11 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {api, ApiError} from '../lib/api';
-import type {BandSongDetail, Resource, SongListItem} from '../lib/types';
+import type {
+  BandSongDetail,
+  Resource,
+  SongListItem,
+  SongStatus,
+} from '../lib/types';
 
 interface RehearsalStats {
   lastRehearsedAt: string;
@@ -54,7 +59,7 @@ export function useUpdateBandSong(bandId: number, songId: number) {
   return useMutation<
     BandSongDetail,
     ApiError,
-    {title?: string; artist?: string; status?: string; notes?: string}
+    {title?: string; artist?: string; status?: SongStatus; notes?: string}
   >({
     mutationFn: data =>
       api.patch<BandSongDetail>(`/api/bands/${bandId}/songs/${songId}`, data),
