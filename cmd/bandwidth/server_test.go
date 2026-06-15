@@ -144,3 +144,26 @@ func TestSongLibraryFlow(t *testing.T) {
 		t.Fatalf("folders: %d", rec.Code)
 	}
 }
+
+func TestBandLifecycleFlow(t *testing.T) {
+	e := testServer(t)
+
+	rec := do(e, http.MethodPost, "/api/auth/signup",
+		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`, nil)
+	alice := rec.Result().Cookies()
+
+	rec = do(e, http.MethodPost, "/api/bands", `{"name":"The Quietones"}`, alice)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create band: %d %s", rec.Code, rec.Body.String())
+	}
+
+	rec = do(e, http.MethodGet, "/api/bands", "", alice)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Quietones") {
+		t.Fatalf("bands list: %d %s", rec.Code, rec.Body.String())
+	}
+
+	rec = do(e, http.MethodGet, "/api/invites", "", alice)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("my invites: %d", rec.Code)
+	}
+}

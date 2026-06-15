@@ -150,6 +150,24 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	folders.DELETE("/:id", api.DeleteFolder)
 	folders.PUT("/:id/entries", api.SetFolderEntries)
 
+	bands := apiGroup.Group("/bands", appmw.RequireAuth(api.Repo))
+	bands.GET("", api.Bands)
+	bands.POST("", api.CreateBand)
+	bands.GET("/:id", api.Band)
+	bands.PATCH("/:id", api.RenameBand)
+	bands.DELETE("/:id", api.DeleteBand)
+	bands.PATCH("/:id/members/:userId", api.SetMemberRole)
+	bands.DELETE("/:id/members/:userId", api.RemoveMember)
+	bands.GET("/:id/invites", api.BandInvites)
+	bands.POST("/:id/invites", api.CreateInvite)
+	bands.DELETE("/:id/invites/:inviteId", api.RevokeInvite)
+
+	invites := apiGroup.Group("/invites", appmw.RequireAuth(api.Repo))
+	invites.GET("", api.MyInvites)
+	invites.POST("/:id/accept", api.AcceptInvite)
+	invites.POST("/:id/decline", api.DeclineInvite)
+	invites.POST("/link", api.JoinByLink)
+
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
 		return nil, err
