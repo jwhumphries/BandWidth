@@ -61,6 +61,14 @@ func deleteBandSongRows(tx *gorm.DB, songID uint) error {
 			return err
 		}
 	}
+	// Defensively remove any FolderEntry rows for this song. folder_entries
+	// is song-scoped (no band_id), so no subject filter is needed. Member
+	// personal rows were already re-pointed onto new song IDs by
+	// convertBandSongForUser, so any remaining entries belong to the
+	// deleted song and must be removed.
+	if err := tx.Where("song_id = ?", songID).Delete(&model.FolderEntry{}).Error; err != nil {
+		return err
+	}
 	return tx.Delete(&model.Song{}, songID).Error
 }
 

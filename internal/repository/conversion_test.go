@@ -92,6 +92,30 @@ func TestDeleteBandSongConvertsPerMember(t *testing.T) {
 	}
 }
 
+func TestDeleteBandSongRemovesFolderEntries(t *testing.T) {
+	repo := testRepo(t)
+	alice, _ := repo.CreateUser("alice", "alice@example.com", "h")
+	band, _ := repo.CreateBand(alice.ID, "Band")
+	song, _ := repo.CreateBandSong(band.ID, "Orphan", "X")
+
+	// Directly insert a FolderEntry for the band song, bypassing the API
+	// guard (simulating a future state where band songs can enter folders).
+	entry := model.FolderEntry{SongID: song.ID, FolderID: 99, Position: 0}
+	if err := repo.db.Create(&entry).Error; err != nil {
+		t.Fatalf("insert FolderEntry: %v", err)
+	}
+
+	if err := repo.DeleteBandSong(song.ID, band.ID); err != nil {
+		t.Fatalf("DeleteBandSong: %v", err)
+	}
+
+	var n int64
+	repo.db.Model(&model.FolderEntry{}).Where("song_id = ?", song.ID).Count(&n)
+	if n != 0 {
+		t.Errorf("DeleteBandSong left %d orphan FolderEntry row(s) for song %d", n, song.ID)
+	}
+}
+
 func TestDeleteBandConvertsForAllMembers(t *testing.T) {
 	repo := testRepo(t)
 	alice, _ := repo.CreateUser("alice", "alice@example.com", "h")
