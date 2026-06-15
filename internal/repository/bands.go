@@ -118,30 +118,57 @@ func (r *Repo) SetMemberRole(bandID, userID uint, role model.BandRole) error {
 	return nil
 }
 
-// RemoveMember removes a user from a band. The bands-songs plan extends
-// this with the personal-copy conversion for the member's song data.
+// RemoveMember removes a user from a band. Before the membership is dropped,
+// each band song the member personally touched is converted to a personal
+// copy (preserving their notes/status/resources/practice); the band's own
+// songs are untouched.
 func (r *Repo) RemoveMember(bandID, userID uint) error {
-	res := r.db.Where("band_id = ? AND user_id = ?", bandID, userID).
-		Delete(&model.BandMember{})
-	if res.Error != nil {
-		return res.Error
-	}
-	if res.RowsAffected != 1 {
-		return gorm.ErrRecordNotFound
-	}
-	return nil
-}
-
-// DeleteBand removes the band, its memberships, and its invites. The
-// bands-songs plan extends this with song conversion/deletion.
-func (r *Repo) DeleteBand(bandID uint) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("band_id = ?", bandID).
-			Delete(&model.BandMember{}).Error; err != nil {
+		var member model.BandMember
+		if err := tx.Where("band_id = ? AND user_id = ?", bandID, userID).
+			First(&member).Error; err != nil {
+			return err // gorm.ErrRecordNotFound for non-members
+		}
+		var songs []model.Song
+		if err := tx.Where("owner_band_id = ?", bandID).Find(&songs).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("band_id = ?", bandID).
-			Delete(&model.BandInvite{}).Error; err != nil {
+		for i := range songs {
+			if err := convertBandSongForUser(tx, &songs[i], userID); err != nil {
+				return err
+			}
+		}
+		return tx.Delete(&member).Error
+	})
+}
+
+// DeleteBand removes the band, its songs, memberships, and invites. Each
+// member's personal work on the band's songs is converted to personal copies
+// first. Atomic.
+func (r *Repo) DeleteBand(bandID uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var songs []model.Song
+		if err := tx.Where("owner_band_id = ?", bandID).Find(&songs).Error; err != nil {
+			return err
+		}
+		var members []model.BandMember
+		if err := tx.Where("band_id = ?", bandID).Find(&members).Error; err != nil {
+			return err
+		}
+		for i := range songs {
+			for _, m := range members {
+				if err := convertBandSongForUser(tx, &songs[i], m.UserID); err != nil {
+					return err
+				}
+			}
+			if err := deleteBandSongRows(tx, songs[i].ID); err != nil {
+				return err
+			}
+		}
+		if err := tx.Where("band_id = ?", bandID).Delete(&model.BandMember{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("band_id = ?", bandID).Delete(&model.BandInvite{}).Error; err != nil {
 			return err
 		}
 		return tx.Delete(&model.Band{}, bandID).Error
