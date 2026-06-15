@@ -29,11 +29,11 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 - `cmd/bandwidth/` — Cobra entry point, Viper config (`BANDWIDTH_*` env
   vars), Echo server wiring, graceful shutdown
 - `internal/handlers/` — HTTP handlers (healthz, SPA fallback, auth,
-  account, 2FA, password reset, songs, practice, resources, folders) sharing one `API` dependency struct
+  account, 2FA, password reset, songs, practice, resources, folders, bands, members, invites) sharing one `API` dependency struct
 - `internal/static/` — `go:embed` of the frontend build; locally only a
   placeholder, populated inside the Dagger release build
 - `internal/model/` — persisted domain types (User, Session, BackupCode,
-  PasswordReset, Song, SongAnnotation, Resource, PracticeEvent, Folder, FolderEntry)
+  PasswordReset, Song, SongAnnotation, Resource, PracticeEvent, Folder, FolderEntry, Band, BandMember, BandInvite)
 - `internal/repository/` — GORM/SQLite persistence (`Repo` struct; CGO-free
   driver `ncruces/go-sqlite3` via gormlite, WAL mode, AutoMigrate at startup)
 - `internal/auth/` — argon2id hashing, random tokens, TOTP, backup codes
@@ -75,6 +75,14 @@ unique per (song, subject, date) with YYYY-MM-DD string dates; the client
 sends its local date. Folders are playlist-style (one song may be in many
 folders) with integer positions reindexed on reorder; deleting a folder
 never deletes songs.
+
+Bands have Admin/Editor/Viewer roles; the creator is a permanent Admin
+(cannot be demoted, removed, or leave — they delete the band). New members
+default to Editor. `MemberRole(bandID, userID)` is the authorization
+primitive; non-members receive 404s for band resources. Direct invites are
+single-use (14-day expiry); share links are multi-use until revoked (7-day
+expiry); invite tokens are stored hashed. Band songs and the band metadata
+layer arrive in the bands-songs plan.
 
 ## Style guides & documented deviations
 
