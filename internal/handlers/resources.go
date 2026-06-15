@@ -45,7 +45,7 @@ func (a *API) CreateResource(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if _, err := a.Repo.SongForUser(id, user.ID); err != nil {
+	if _, err := a.Repo.SongVisibleToUser(id, user.ID); err != nil {
 		return notFoundOr(err, "song")
 	}
 	var req resourceRequest
