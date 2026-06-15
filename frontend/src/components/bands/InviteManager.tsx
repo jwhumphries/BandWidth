@@ -74,7 +74,9 @@ export default function InviteManager({bandId}: {bandId: number}) {
             <code className="min-w-0 flex-1 truncate text-sm">{linkURL}</code>
             <button
               className="btn btn-ghost btn-xs"
-              onClick={() => void navigator.clipboard.writeText(linkURL)}
+              onClick={() => {
+                void navigator.clipboard?.writeText(linkURL);
+              }}
             >
               Copy
             </button>
