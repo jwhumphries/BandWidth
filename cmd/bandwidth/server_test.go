@@ -206,3 +206,36 @@ func TestBandSongInterleaveFlow(t *testing.T) {
 		t.Fatalf("band song not tagged in personal library: %s", rec.Body.String())
 	}
 }
+
+func TestBandFolderFlow(t *testing.T) {
+	e := testServer(t)
+
+	rec := do(e, http.MethodPost, "/api/auth/signup",
+		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`, nil)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("signup: %d %s", rec.Code, rec.Body.String())
+	}
+	alice := rec.Result().Cookies()
+
+	rec = do(e, http.MethodPost, "/api/bands", `{"name":"The Quietones"}`, alice)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create band: %d %s", rec.Code, rec.Body.String())
+	}
+	var band struct {
+		ID uint `json:"id"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &band); err != nil {
+		t.Fatalf("decode band: %v", err)
+	}
+
+	rec = do(e, http.MethodPost, fmt.Sprintf("/api/bands/%d/folders", band.ID),
+		`{"name":"Set 1"}`, alice)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create band folder: %d %s", rec.Code, rec.Body.String())
+	}
+
+	rec = do(e, http.MethodGet, fmt.Sprintf("/api/bands/%d/folders", band.ID), "", alice)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Set 1") {
+		t.Fatalf("band folders: %d %s", rec.Code, rec.Body.String())
+	}
+}
