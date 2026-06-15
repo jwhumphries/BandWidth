@@ -1,6 +1,11 @@
 package repository
 
-import "testing"
+import (
+	"errors"
+	"testing"
+
+	"gorm.io/gorm"
+)
 
 func TestFolderLifecycle(t *testing.T) {
 	repo := testRepo(t)
@@ -94,5 +99,39 @@ func TestFolderOwnershipChecks(t *testing.T) {
 	// Songs not visible to the owner are rejected from entries.
 	if err := repo.SetFolderEntries(folder.ID, alice.ID, []uint{bobSong.ID}); err == nil {
 		t.Error("invisible song accepted into folder")
+	}
+}
+
+func TestPersonalFolderHoldsBandSong(t *testing.T) {
+	repo := testRepo(t)
+	aliceUser, _ := repo.CreateUser("alice", "alice@example.com", "h")
+	alice := aliceUser.ID
+	aliceBand, _ := repo.CreateBand(alice, "The Quietones")
+	band := aliceBand.ID
+	bandSong, err := repo.CreateBandSong(band, "Wonderwall", "Oasis")
+	if err != nil {
+		t.Fatalf("create band song: %v", err)
+	}
+
+	// Alice (a member) can put the band song in her personal folder.
+	folder, err := repo.CreateFolder(alice, "Faves")
+	if err != nil {
+		t.Fatalf("create folder: %v", err)
+	}
+	if err := repo.SetFolderEntries(folder.ID, alice, []uint{bandSong.ID}); err != nil {
+		t.Fatalf("set entries with band song: %v", err)
+	}
+	folders, _ := repo.FoldersForUser(alice)
+	if len(folders) != 1 || len(folders[0].SongIDs) != 1 || folders[0].SongIDs[0] != bandSong.ID {
+		t.Fatalf("personal folder = %+v", folders)
+	}
+
+	// A non-member cannot: bob is not in the band.
+	bobUser, _ := repo.CreateUser("bob", "bob@example.com", "h")
+	bob := bobUser.ID
+	bobFolder, _ := repo.CreateFolder(bob, "Bob's")
+	err = repo.SetFolderEntries(bobFolder.ID, bob, []uint{bandSong.ID})
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("non-member entry = %v, want ErrRecordNotFound", err)
 	}
 }
