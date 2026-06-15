@@ -44,7 +44,7 @@ func (a *API) LogPractice(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if _, err := a.Repo.SongForUser(id, user.ID); err != nil {
+	if _, err := a.Repo.SongVisibleToUser(id, user.ID); err != nil {
 		return notFoundOr(err, "song")
 	}
 	var req logPracticeRequest
@@ -73,7 +73,7 @@ func (a *API) DeletePractice(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if _, err := a.Repo.SongForUser(id, user.ID); err != nil {
+	if _, err := a.Repo.SongVisibleToUser(id, user.ID); err != nil {
 		return notFoundOr(err, "song")
 	}
 	date := c.Param("date")

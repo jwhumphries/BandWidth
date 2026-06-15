@@ -1,5 +1,6 @@
 import {Link, useParams} from 'react-router';
 import BandSettings from '../components/bands/BandSettings';
+import BandSongList from '../components/bands/BandSongList';
 import InviteManager from '../components/bands/InviteManager';
 import MemberList from '../components/bands/MemberList';
 import {useBand} from '../hooks/bands';
@@ -36,6 +37,7 @@ export default function BandPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">{band.name}</h1>
+      <BandSongList bandId={band.id} canEdit={band.myRole !== 'viewer'} />
       <MemberList band={band} />
       {isAdmin && <InviteManager bandId={band.id} />}
       {isAdmin && <BandSettings band={band} />}

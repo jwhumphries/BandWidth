@@ -60,7 +60,7 @@ func (a *API) songDetailResponse(song *model.Song, userID uint) (map[string]any,
 			"id": r.ID, "url": r.URL, "label": r.Label,
 		})
 	}
-	return map[string]any{
+	detail := map[string]any{
 		"id":              song.ID,
 		"title":           song.Title,
 		"artist":          song.Artist,
@@ -69,7 +69,27 @@ func (a *API) songDetailResponse(song *model.Song, userID uint) (map[string]any,
 		"resources":       resList,
 		"lastPracticedAt": last,
 		"practiceCount":   count,
-	}, nil
+	}
+	if song.OwnerBandID != nil {
+		band, err := a.Repo.BandByID(*song.OwnerBandID)
+		if err != nil {
+			return nil, err
+		}
+		bandLayer, err := a.bandSongDetailResponse(song, *song.OwnerBandID)
+		if err != nil {
+			return nil, err
+		}
+		detail["band"] = map[string]any{
+			"bandId":          band.ID,
+			"bandName":        band.Name,
+			"status":          bandLayer["status"],
+			"notes":           bandLayer["notes"],
+			"resources":       bandLayer["resources"],
+			"lastRehearsedAt": bandLayer["lastRehearsedAt"],
+			"rehearsalCount":  bandLayer["rehearsalCount"],
+		}
+	}
+	return detail, nil
 }
 
 // Songs returns the user's library list.
@@ -131,7 +151,7 @@ func (a *API) Song(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	song, err := a.Repo.SongForUser(id, user.ID)
+	song, err := a.Repo.SongVisibleToUser(id, user.ID)
 	if err != nil {
 		return notFoundOr(err, "song")
 	}
@@ -159,13 +179,17 @@ func (a *API) UpdateSong(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	song, err := a.Repo.SongForUser(id, user.ID)
+	song, err := a.Repo.SongVisibleToUser(id, user.ID)
 	if err != nil {
 		return notFoundOr(err, "song")
 	}
 	var req updateSongRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
+	}
+	if song.OwnerBandID != nil && (req.Title != nil || req.Artist != nil) {
+		return echo.NewHTTPError(http.StatusForbidden,
+			"a band song's title and artist are managed in the band view")
 	}
 
 	// Validate all fields before any write.
@@ -234,7 +258,15 @@ func (a *API) DeleteSong(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	if err := a.Repo.DeleteSong(id, user.ID); err != nil {
+	song, err := a.Repo.SongVisibleToUser(id, user.ID)
+	if err != nil {
+		return notFoundOr(err, "song")
+	}
+	if song.OwnerBandID != nil {
+		return echo.NewHTTPError(http.StatusForbidden,
+			"band songs cannot be deleted from your library")
+	}
+	if err := a.Repo.DeleteSong(song.ID, user.ID); err != nil {
 		return notFoundOr(err, "song")
 	}
 	return c.NoContent(http.StatusNoContent)

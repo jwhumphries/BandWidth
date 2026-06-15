@@ -29,13 +29,15 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
 - `cmd/bandwidth/` — Cobra entry point, Viper config (`BANDWIDTH_*` env
   vars), Echo server wiring, graceful shutdown
 - `internal/handlers/` — HTTP handlers (healthz, SPA fallback, auth,
-  account, 2FA, password reset, songs, practice, resources, folders, bands, members, invites) sharing one `API` dependency struct
+  account, 2FA, password reset, songs, practice, resources, folders, bands, members, invites, band songs, band rehearsals/resources) sharing one `API` dependency struct
 - `internal/static/` — `go:embed` of the frontend build; locally only a
   placeholder, populated inside the Dagger release build
 - `internal/model/` — persisted domain types (User, Session, BackupCode,
   PasswordReset, Song, SongAnnotation, Resource, PracticeEvent, Folder, FolderEntry, Band, BandMember, BandInvite)
 - `internal/repository/` — GORM/SQLite persistence (`Repo` struct; CGO-free
-  driver `ncruces/go-sqlite3` via gormlite, WAL mode, AutoMigrate at startup)
+  driver `ncruces/go-sqlite3` via gormlite, WAL mode, AutoMigrate at startup);
+  `bandsongs.go` houses the conversion engine; `subject.go` defines the `subj`
+  value backing user- and band-keyed metadata methods
 - `internal/auth/` — argon2id hashing, random tokens, TOTP, backup codes
 - `internal/middleware/` — `RequireAuth` session middleware (import-aliased
   `appmw` where Echo's middleware package is also imported)
@@ -81,8 +83,22 @@ Bands have Admin/Editor/Viewer roles; the creator is a permanent Admin
 default to Editor. `MemberRole(bandID, userID)` is the authorization
 primitive; non-members receive 404s for band resources. Direct invites are
 single-use (14-day expiry); share links are multi-use until revoked (7-day
-expiry); invite tokens are stored hashed. Band songs and the band metadata
-layer arrive in the bands-songs plan.
+expiry); invite tokens are stored hashed.
+
+Band songs are `owner_band_id`-owned and carry a full band metadata layer
+(status, notes, resources, and a rehearsal log = band-keyed practice
+events), edited only from the band view by Editors/Admins. Metadata
+operations are written once against an internal `subj` value (a user XOR a
+band) and exposed as user- and band-keyed methods. A band song appears in
+every member's personal library with the member's OWN editable layer
+(personal status/notes/resources/practice) plus a read-only band section;
+its title/artist are band-owned and it cannot be deleted from the personal
+view. When a member loses access to a band song (they leave or are removed,
+the band deletes the song, or the band is deleted), any personal rows they
+have on it are re-pointed onto a freshly created personal-copy song (the
+band layer is not copied); untouched band songs simply leave their library.
+All conversion runs in the same transaction as the removal. Band folders
+arrive in the bands-folders plan.
 
 ## Style guides & documented deviations
 

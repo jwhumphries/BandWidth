@@ -19,6 +19,9 @@ export default function SongRow({
         </span>
       </Link>
       <StatusBadge status={song.status} />
+      {song.bandName && (
+        <span className="badge badge-outline badge-sm">{song.bandName}</span>
+      )}
       <span className="text-base-content/60 hidden text-sm sm:block">
         {song.lastPracticedAt || 'Never practiced'}
       </span>

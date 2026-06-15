@@ -6,6 +6,57 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
+func TestSongsForUserIncludesBandSongs(t *testing.T) {
+	repo := testRepo(t)
+	alice, _ := repo.CreateUser("alice", "alice@example.com", "h")
+	bob, _ := repo.CreateUser("bob", "bob@example.com", "h")
+	band, _ := repo.CreateBand(alice.ID, "The Quietones")
+	_ = repo.AddMember(band.ID, bob.ID, model.RoleEditor)
+
+	_, _ = repo.CreateSong(bob.ID, "My Own Song", "Me")
+	bandSong, _ := repo.CreateBandSong(band.ID, "Band Song", "Them")
+
+	// Bob's library shows both his own song and the band song.
+	items, err := repo.SongsForUser(bob.ID)
+	if err != nil || len(items) != 2 {
+		t.Fatalf("SongsForUser: %d items (%v)", len(items), err)
+	}
+	var own, shared *SongListItem
+	for i := range items {
+		switch items[i].Title {
+		case "My Own Song":
+			own = &items[i]
+		case "Band Song":
+			shared = &items[i]
+		}
+	}
+	if own == nil || own.BandID != nil {
+		t.Errorf("own song tagged with band: %+v", own)
+	}
+	if shared == nil || shared.BandID == nil || *shared.BandID != band.ID || shared.BandName != "The Quietones" {
+		t.Errorf("band song not tagged: %+v", shared)
+	}
+
+	// The status shown for the band song is BOB'S personal layer, not the
+	// band's. Set a band status and a different personal status.
+	bandStatus := model.StatusNailed
+	_ = repo.UpsertBandAnnotation(bandSong.ID, band.ID, &bandStatus, nil)
+	personal := model.StatusLearning
+	_ = repo.UpsertAnnotation(bandSong.ID, bob.ID, &personal, nil)
+	items, _ = repo.SongsForUser(bob.ID)
+	for i := range items {
+		if items[i].Title == "Band Song" && items[i].Status != model.StatusLearning {
+			t.Errorf("band song list status = %q, want bob's personal 'learning'", items[i].Status)
+		}
+	}
+
+	// A non-member's library never shows the band song.
+	carol, _ := repo.CreateUser("carol", "carol@example.com", "h")
+	if items, _ := repo.SongsForUser(carol.ID); len(items) != 0 {
+		t.Errorf("non-member library = %d, want 0", len(items))
+	}
+}
+
 func TestCreateAndListSongs(t *testing.T) {
 	repo := testRepo(t)
 	user, _ := repo.CreateUser("alice", "alice@example.com", "h")
