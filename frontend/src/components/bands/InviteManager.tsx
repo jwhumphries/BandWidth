@@ -45,6 +45,7 @@ export default function InviteManager({bandId}: {bandId: number}) {
           <input
             className="input input-sm min-w-0 flex-1"
             placeholder="Username or email…"
+            aria-label="Username or email to invite"
             value={username}
             onChange={e => setUsername(e.target.value)}
           />

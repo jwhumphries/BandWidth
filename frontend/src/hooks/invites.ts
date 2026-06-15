@@ -39,7 +39,7 @@ export function useJoinByLink() {
   const onResolved = useInviteResolution();
   return useMutation<{bandId: number}, ApiError, string>({
     mutationFn: token =>
-      api.post<{bandId: number}>(`/api/invites/link/${token}`),
+      api.post<{bandId: number}>('/api/invites/link', {token}),
     onSuccess: onResolved,
   });
 }

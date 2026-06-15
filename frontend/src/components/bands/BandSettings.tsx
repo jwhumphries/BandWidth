@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {useNavigate} from 'react-router';
 import ConfirmModal from '../songs/ConfirmModal';
@@ -12,6 +12,9 @@ export default function BandSettings({band}: {band: BandDetail}) {
   const deleteBand = useDeleteBand();
   const navigate = useNavigate();
   const [name, setName] = useState(band.name);
+  useEffect(() => {
+    setName(band.name);
+  }, [band.id, band.name]);
   const [confirming, setConfirming] = useState(false);
   const isCreator = me?.id === band.creatorId;
 
