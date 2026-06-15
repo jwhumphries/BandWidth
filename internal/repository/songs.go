@@ -9,8 +9,9 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
-// SongListItem is one row of a user's library: identity plus the user's
-// own metadata layer, with practice stats pre-aggregated.
+// SongListItem is one row of a user's library: identity plus the user's own
+// metadata layer, with practice stats pre-aggregated. BandID/BandName are
+// set only for band-owned songs (shared into the member's library).
 type SongListItem struct {
 	ID              uint             `json:"id"`
 	Title           string           `json:"title"`
@@ -18,6 +19,8 @@ type SongListItem struct {
 	Status          model.SongStatus `json:"status"`
 	LastPracticedAt string           `json:"lastPracticedAt"`
 	PracticeCount   int              `json:"practiceCount"`
+	BandID          *uint            `json:"bandId,omitempty"`
+	BandName        string           `json:"bandName,omitempty"`
 }
 
 // CreateSong inserts a user-owned song.
@@ -29,22 +32,27 @@ func (r *Repo) CreateSong(userID uint, title, artist string) (*model.Song, error
 	return song, nil
 }
 
-// SongsForUser returns the user's library with their annotation layer and
-// practice aggregates joined in. Missing annotations read as not_learned.
+// SongsForUser returns the member's library: songs they own plus songs owned
+// by bands they belong to, each with the user's own annotation/practice
+// layer (so a band song shows the member's personal status, not the band's).
 func (r *Repo) SongsForUser(userID uint) ([]SongListItem, error) {
 	items := []SongListItem{}
 	err := r.db.Table("songs").
 		Select(`songs.id, songs.title, songs.artist,
 			COALESCE(sa.status, 'not_learned') AS status,
 			COALESCE(pe.last_practiced_at, '') AS last_practiced_at,
-			COALESCE(pe.practice_count, 0) AS practice_count`).
+			COALESCE(pe.practice_count, 0) AS practice_count,
+			songs.owner_band_id AS band_id,
+			COALESCE(b.name, '') AS band_name`).
 		Joins(`LEFT JOIN song_annotations sa
 			ON sa.song_id = songs.id AND sa.user_id = ?`, userID).
 		Joins(`LEFT JOIN (
 			SELECT song_id, MAX(date) AS last_practiced_at, COUNT(*) AS practice_count
 			FROM practice_events WHERE user_id = ? GROUP BY song_id
 		) pe ON pe.song_id = songs.id`, userID).
-		Where("songs.owner_user_id = ?", userID).
+		Joins(`LEFT JOIN bands b ON b.id = songs.owner_band_id`).
+		Where(`songs.owner_user_id = ? OR songs.owner_band_id IN
+			(SELECT band_id FROM band_members WHERE user_id = ?)`, userID, userID).
 		Order("songs.title COLLATE NOCASE, songs.id").
 		Scan(&items).Error
 	if err != nil {
