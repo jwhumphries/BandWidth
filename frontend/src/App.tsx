@@ -1,5 +1,6 @@
 import {Route, Routes} from 'react-router';
 import Layout from './components/Layout';
+import UpdateToast from './components/UpdateToast';
 import RequireAuth from './components/RequireAuth';
 import BandPage from './pages/BandPage';
 import BandSongPage from './pages/BandSongPage';
@@ -15,22 +16,25 @@ import SongPage from './pages/SongPage';
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route element={<RequireAuth />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/songs/:id" element={<SongPage />} />
-          <Route path="/bands" element={<BandsPage />} />
-          <Route path="/bands/:id" element={<BandPage />} />
-          <Route path="/bands/:id/songs/:songId" element={<BandSongPage />} />
-          <Route path="/join/:token" element={<JoinPage />} />
+    <>
+      <UpdateToast />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route element={<RequireAuth />}>
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/songs/:id" element={<SongPage />} />
+            <Route path="/bands" element={<BandsPage />} />
+            <Route path="/bands/:id" element={<BandPage />} />
+            <Route path="/bands/:id/songs/:songId" element={<BandSongPage />} />
+            <Route path="/join/:token" element={<JoinPage />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 }
