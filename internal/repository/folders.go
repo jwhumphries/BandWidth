@@ -18,38 +18,55 @@ type FolderWithSongs struct {
 
 // CreateFolder appends a folder to the user's list.
 func (r *Repo) CreateFolder(userID uint, name string) (*model.Folder, error) {
+	return r.createFolder(userSubj(userID), name)
+}
+
+// CreateBandFolder appends a folder to the band's list.
+func (r *Repo) CreateBandFolder(bandID uint, name string) (*model.Folder, error) {
+	return r.createFolder(bandSubj(bandID), name)
+}
+
+func (r *Repo) createFolder(s subj, name string) (*model.Folder, error) {
+	cond, id := s.ownerScope()
 	var maxPos int
 	err := r.db.Model(&model.Folder{}).
 		Select("COALESCE(MAX(position), 0)").
-		Where("owner_user_id = ?", userID).
-		Scan(&maxPos).Error
+		Where(cond, id).Scan(&maxPos).Error
 	if err != nil {
 		return nil, err
 	}
-	folder := &model.Folder{Name: name, Position: maxPos + 1, OwnerUserID: &userID}
+	folder := &model.Folder{Name: name, Position: maxPos + 1, OwnerUserID: s.userID, OwnerBandID: s.bandID}
 	if err := r.db.Create(folder).Error; err != nil {
 		return nil, err
 	}
 	return folder, nil
 }
 
-// folderForUser loads a folder only when the user owns it.
-func (r *Repo) folderForUser(folderID, userID uint) (*model.Folder, error) {
+// folderForOwner loads a folder only when this subject owns it.
+func (r *Repo) folderForOwner(folderID uint, s subj) (*model.Folder, error) {
 	var folder model.Folder
-	err := r.db.Where("id = ? AND owner_user_id = ?", folderID, userID).
-		First(&folder).Error
+	cond, id := s.ownerScope()
+	err := r.db.Where("id = ? AND "+cond, folderID, id).First(&folder).Error
 	if err != nil {
 		return nil, err
 	}
 	return &folder, nil
 }
 
-// FoldersForUser returns the user's folders in position order, each with
-// its ordered song IDs.
+// FoldersForUser returns the user's folders in position order with song IDs.
 func (r *Repo) FoldersForUser(userID uint) ([]FolderWithSongs, error) {
+	return r.foldersForOwner(userSubj(userID))
+}
+
+// FoldersForBand returns the band's folders in position order with song IDs.
+func (r *Repo) FoldersForBand(bandID uint) ([]FolderWithSongs, error) {
+	return r.foldersForOwner(bandSubj(bandID))
+}
+
+func (r *Repo) foldersForOwner(s subj) ([]FolderWithSongs, error) {
+	cond, id := s.ownerScope()
 	var folders []model.Folder
-	err := r.db.Where("owner_user_id = ?", userID).
-		Order("position, id").Find(&folders).Error
+	err := r.db.Where(cond, id).Order("position, id").Find(&folders).Error
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +90,16 @@ func (r *Repo) FoldersForUser(userID uint) ([]FolderWithSongs, error) {
 
 // RenameFolder renames the user's folder.
 func (r *Repo) RenameFolder(folderID, userID uint, name string) error {
-	folder, err := r.folderForUser(folderID, userID)
+	return r.renameFolder(folderID, userSubj(userID), name)
+}
+
+// RenameBandFolder renames the band's folder.
+func (r *Repo) RenameBandFolder(folderID, bandID uint, name string) error {
+	return r.renameFolder(folderID, bandSubj(bandID), name)
+}
+
+func (r *Repo) renameFolder(folderID uint, s subj, name string) error {
+	folder, err := r.folderForOwner(folderID, s)
 	if err != nil {
 		return err
 	}
@@ -83,7 +109,16 @@ func (r *Repo) RenameFolder(folderID, userID uint, name string) error {
 
 // DeleteFolder removes the user's folder and its entries; songs are untouched.
 func (r *Repo) DeleteFolder(folderID, userID uint) error {
-	folder, err := r.folderForUser(folderID, userID)
+	return r.deleteFolder(folderID, userSubj(userID))
+}
+
+// DeleteBandFolder removes the band's folder and its entries; songs untouched.
+func (r *Repo) DeleteBandFolder(folderID, bandID uint) error {
+	return r.deleteFolder(folderID, bandSubj(bandID))
+}
+
+func (r *Repo) deleteFolder(folderID uint, s subj) error {
+	folder, err := r.folderForOwner(folderID, s)
 	if err != nil {
 		return err
 	}
@@ -96,40 +131,56 @@ func (r *Repo) DeleteFolder(folderID, userID uint) error {
 	})
 }
 
-// ReorderFolders applies the given order to the user's folders. IDs not
-// owned by the user are rejected.
+// ReorderFolders applies the given order to the user's folders.
 func (r *Repo) ReorderFolders(userID uint, folderIDs []uint) error {
+	return r.reorderFolders(userSubj(userID), folderIDs)
+}
+
+// ReorderBandFolders applies the given order to the band's folders.
+func (r *Repo) ReorderBandFolders(bandID uint, folderIDs []uint) error {
+	return r.reorderFolders(bandSubj(bandID), folderIDs)
+}
+
+func (r *Repo) reorderFolders(s subj, folderIDs []uint) error {
+	cond, id := s.ownerScope()
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		for i, id := range folderIDs {
+		for i, fid := range folderIDs {
 			res := tx.Model(&model.Folder{}).
-				Where("id = ? AND owner_user_id = ?", id, userID).
+				Where("id = ? AND "+cond, fid, id).
 				Update("position", i+1)
 			if res.Error != nil {
 				return res.Error
 			}
 			if res.RowsAffected != 1 {
-				return fmt.Errorf("folder %d not found: %w", id, gorm.ErrRecordNotFound)
+				return fmt.Errorf("folder %d not found: %w", fid, gorm.ErrRecordNotFound)
 			}
 		}
 		return nil
 	})
 }
 
-// SetFolderEntries replaces the folder's membership and order with songIDs.
-// Every song must be visible to the user.
+// SetFolderEntries replaces a user folder's membership and order. Every song
+// must be visible to the user (owned or shared by a band they belong to).
 func (r *Repo) SetFolderEntries(folderID, userID uint, songIDs []uint) error {
-	if _, err := r.folderForUser(folderID, userID); err != nil {
+	return r.setFolderEntries(folderID, userSubj(userID), songIDs)
+}
+
+// SetBandFolderEntries replaces a band folder's membership and order. Every
+// song must be owned by this band.
+func (r *Repo) SetBandFolderEntries(folderID, bandID uint, songIDs []uint) error {
+	return r.setFolderEntries(folderID, bandSubj(bandID), songIDs)
+}
+
+func (r *Repo) setFolderEntries(folderID uint, s subj, songIDs []uint) error {
+	if _, err := r.folderForOwner(folderID, s); err != nil {
 		return err
 	}
 	if len(songIDs) > 0 {
-		var visible int64
-		err := r.db.Model(&model.Song{}).
-			Where("id IN ? AND owner_user_id = ?", songIDs, userID).
-			Count(&visible).Error
+		ok, err := r.songsSelectableFor(s, songIDs)
 		if err != nil {
 			return err
 		}
-		if visible != int64(len(songIDs)) {
+		if !ok {
 			return fmt.Errorf("one or more songs not found: %w", gorm.ErrRecordNotFound)
 		}
 	}
@@ -146,4 +197,23 @@ func (r *Repo) SetFolderEntries(folderID, userID uint, songIDs []uint) error {
 		}
 		return nil
 	})
+}
+
+// songsSelectableFor reports whether every song may be placed in this
+// subject's folder: any visible song for a user, only the band's own songs for
+// a band.
+func (r *Repo) songsSelectableFor(s subj, songIDs []uint) (bool, error) {
+	var n int64
+	q := r.db.Model(&model.Song{})
+	if s.userID != nil {
+		q = q.Where(`id IN ? AND (owner_user_id = ? OR owner_band_id IN
+			(SELECT band_id FROM band_members WHERE user_id = ?))`,
+			songIDs, *s.userID, *s.userID)
+	} else {
+		q = q.Where("id IN ? AND owner_band_id = ?", songIDs, *s.bandID)
+	}
+	if err := q.Count(&n).Error; err != nil {
+		return false, err
+	}
+	return n == int64(len(songIDs)), nil
 }

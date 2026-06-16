@@ -171,6 +171,12 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	bands.POST("/:id/songs/:songId/resources", api.CreateBandResource)
 	bands.PATCH("/:id/songs/:songId/resources/:resourceId", api.UpdateBandResource)
 	bands.DELETE("/:id/songs/:songId/resources/:resourceId", api.DeleteBandResource)
+	bands.GET("/:id/folders", api.BandFolders)
+	bands.POST("/:id/folders", api.CreateBandFolder)
+	bands.PUT("/:id/folders/order", api.ReorderBandFolders)
+	bands.PATCH("/:id/folders/:folderId", api.UpdateBandFolder)
+	bands.DELETE("/:id/folders/:folderId", api.DeleteBandFolder)
+	bands.PUT("/:id/folders/:folderId/entries", api.SetBandFolderEntries)
 
 	invites := apiGroup.Group("/invites", appmw.RequireAuth(api.Repo))
 	invites.GET("", api.MyInvites)

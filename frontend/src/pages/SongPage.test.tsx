@@ -111,11 +111,17 @@ describe('SongPage band song', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify(bandDetail), {status: 200}),
-        ),
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/folders')) {
+          return Promise.resolve(
+            jsonResponse(200, [
+              {id: 1, name: 'Faves', position: 1, songIds: []},
+            ]),
+          );
+        }
+        return Promise.resolve(jsonResponse(200, bandDetail));
+      }),
     );
   });
 
@@ -140,5 +146,8 @@ describe('SongPage band song', () => {
     expect(
       screen.queryByRole('button', {name: /delete song/i}),
     ).not.toBeInTheDocument();
+    // The member can still file a band song into their personal folders.
+    expect(screen.getByText('Faves')).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', {name: 'Faves'})).not.toBeChecked();
   });
 });

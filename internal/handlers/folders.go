@@ -12,6 +12,15 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
+// badRequestOrErr maps a not-found to a 400 with msg (used where bad input
+// names missing rows) and passes other errors through.
+func badRequestOrErr(err error, msg string) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return echo.NewHTTPError(http.StatusBadRequest, msg)
+	}
+	return err
+}
+
 func folderResponse(f *model.Folder) map[string]any {
 	return map[string]any{
 		"id": f.ID, "name": f.Name, "position": f.Position, "songIds": []uint{},
@@ -111,10 +120,7 @@ func (a *API) ReorderFolders(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
 	}
 	if err := a.Repo.ReorderFolders(user.ID, req.FolderIDs); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return echo.NewHTTPError(http.StatusBadRequest, "one or more folders not found")
-		}
-		return err
+		return badRequestOrErr(err, "one or more folders not found")
 	}
 	return c.NoContent(http.StatusNoContent)
 }
@@ -147,10 +153,7 @@ func (a *API) SetFolderEntries(c *echo.Context) error {
 		}
 	}
 	if err := a.Repo.SetFolderEntries(id, user.ID, songIDs); err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return echo.NewHTTPError(http.StatusBadRequest, "folder or songs not found")
-		}
-		return err
+		return badRequestOrErr(err, "folder or songs not found")
 	}
 	return c.NoContent(http.StatusNoContent)
 }

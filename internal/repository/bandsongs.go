@@ -31,11 +31,21 @@ func convertBandSongForUser(tx *gorm.DB, song *model.Song, userID uint) error {
 			return err
 		}
 	}
+	// Re-point the member's personal folder placements onto the copy. Band
+	// folder entries (folders owned by the band) are left for deleteBandSongRows.
+	err = tx.Model(&model.FolderEntry{}).
+		Where(`song_id = ? AND folder_id IN
+			(SELECT id FROM folders WHERE owner_user_id = ?)`, song.ID, userID).
+		Update("song_id", personal.ID).Error
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-// userTouchedSong reports whether the user has any personal metadata row on
-// the song.
+// userTouchedSong reports whether the user has any personal work on the song:
+// a metadata row (annotation, resource, practice) or a placement in one of
+// their own folders.
 func userTouchedSong(tx *gorm.DB, songID, userID uint) (bool, error) {
 	for _, m := range []any{&model.SongAnnotation{}, &model.Resource{}, &model.PracticeEvent{}} {
 		var n int64
@@ -48,7 +58,15 @@ func userTouchedSong(tx *gorm.DB, songID, userID uint) (bool, error) {
 			return true, nil
 		}
 	}
-	return false, nil
+	var entries int64
+	err := tx.Model(&model.FolderEntry{}).
+		Where(`song_id = ? AND folder_id IN
+			(SELECT id FROM folders WHERE owner_user_id = ?)`, songID, userID).
+		Count(&entries).Error
+	if err != nil {
+		return false, err
+	}
+	return entries > 0, nil
 }
 
 // deleteBandSongRows removes the band layer for one band song and the song

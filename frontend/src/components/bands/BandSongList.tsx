@@ -3,16 +3,32 @@ import {Link} from 'react-router';
 import StatusBadge from '../songs/StatusBadge';
 import AddBandSongModal from './AddBandSongModal';
 import {useBandSongs} from '../../hooks/bandsongs';
+import {useBandFolders} from '../../hooks/bandfolders';
 
 export default function BandSongList({
   bandId,
   canEdit,
+  folderId = null,
 }: {
   bandId: number;
   canEdit: boolean;
+  folderId?: number | null;
 }) {
   const {data: songs = []} = useBandSongs(bandId);
+  const {data: folders = []} = useBandFolders(bandId);
   const [adding, setAdding] = useState(false);
+
+  const folder =
+    folderId === null ? null : folders.find(f => f.id === folderId);
+  const visible =
+    folder === null || folder === undefined
+      ? songs
+      : (() => {
+          const byID = new Map(songs.map(s => [s.id, s]));
+          return folder.songIds
+            .map(id => byID.get(id))
+            .filter((s): s is (typeof songs)[number] => s !== undefined);
+        })();
 
   return (
     <section className="card bg-base-100 shadow">
@@ -28,11 +44,11 @@ export default function BandSongList({
             </button>
           )}
         </div>
-        {songs.length === 0 ? (
+        {visible.length === 0 ? (
           <p className="text-base-content/60 text-sm">No band songs yet.</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {songs.map(song => (
+            {visible.map(song => (
               <li key={song.id}>
                 <Link
                   to={`/bands/${bandId}/songs/${song.id}`}
