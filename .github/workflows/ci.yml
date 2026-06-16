@@ -28,6 +28,10 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
+    # dev is the development branch — skip the release image build on dev
+    # pushes (it still runs on PRs to main, on main, and on other branches).
+    # The actual publish/deploy lives in publish.yml (main + tags only).
+    if: github.ref != 'refs/heads/dev'
     env:
       DAGGER_NO_NAG: "1"
     steps:
