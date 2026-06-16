@@ -8,6 +8,12 @@ on:
       - 'v*'
   workflow_dispatch:
 
+concurrency:
+  # Serialize publish/deploy per ref so overlapping pushes to main can't race
+  # a Fly rollout. Not cancel-in-progress: never interrupt an in-flight deploy.
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   # GHCR requires lowercase image paths; this repo is mixed-case
   # (jwhumphries/BandWidth), so the registry ref is hardcoded lowercase to
@@ -26,6 +32,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install Dagger
         uses: dagger/dagger-for-github@b81317a976cb7f7125469707321849737cd1b3bc # v7
@@ -44,7 +51,7 @@ jobs:
           dagger call publish \
             --source . \
             --registry "${{ env.IMAGE }}" \
-            --version "${{ github.sha }}" \
+            --version "${{ github.ref_type == 'tag' && github.ref_name || github.sha }}" \
             --registry-user "${{ github.actor }}" \
             --registry-password env:GITHUB_TOKEN
         env:
@@ -57,6 +64,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Setup Fly CLI
         uses: superfly/flyctl-actions/setup-flyctl@ed8efb33836e8b2096c7fd3ba1c8afe303ebbff1 # master
