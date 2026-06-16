@@ -46,12 +46,25 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
   reset hidden, endpoints 404) when `BANDWIDTH_SMTP_HOST`/`FROM` are unset
 - `version/` — version string injected via ldflags
 - `frontend/` — React SPA (Vite, React Router, Tailwind v4 + DaisyUI 5);
-  Vite dev server proxies `/api` and `/healthz` to the Go server
+  Vite dev server proxies `/api` and `/healthz` to the Go server. PWA layer:
+  `vite-plugin-pwa` with `registerType: 'prompt'` precaches the app shell and
+  uses NetworkOnly for all `/api` routes (no stale data); the `UpdateToast`
+  component (`frontend/src/components/UpdateToast.tsx`) surfaces the SW
+  "new version ready" signal as a reload toast. App icons are pending artwork
+  (the manifest is complete but icons is empty; not yet installable — see Task 7
+  of the PWA plan).
 - `scripts/develop.sh` — the dev loop `just dev` runs (bun install, then
   vite + air concurrently)
 - `.github/` — GitHub Actions CI (`workflows/ci.yml` calls the same Dagger
-  functions as `just`) and Renovate config
-- `.dagger/` — CI pipeline; the justfile is a thin wrapper over it
+  functions as `just`), Renovate config, and `workflows/publish.yml` (publish
+  to GHCR via Dagger `Publish` function, then `flyctl deploy --remote-only` to
+  fly.io on pushes to `main`)
+- `.dagger/` — CI pipeline; the justfile is a thin wrapper over it. The
+  `Publish` function builds the `Release` container and pushes `:version` +
+  `:latest` tags to a registry (default `ghcr.io/jwhumphries/bandwidth`).
+- `fly.toml` — single always-on machine (SQLite cannot multi-attach) with a
+  Fly volume mounted at `/data` for the SQLite file; `/healthz` health check;
+  image pulled from GHCR. See `DEPLOY.md` for the one-time setup runbook.
 
 ## Configuration
 
