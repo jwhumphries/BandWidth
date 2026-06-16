@@ -7,5 +7,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     testTimeout: 15000,
+    alias: {
+      'virtual:pwa-register/react': new URL(
+        './src/test/pwa-register-stub.ts',
+        import.meta.url,
+      ).pathname,
+    },
   },
 });

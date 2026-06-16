@@ -14,8 +14,10 @@ and optional SMTP password reset. Personal song tracking (status, notes, links,
 practice days, folders) is implemented. Bands with roles, invites, shared
 songs, and band folders (with personal-folder cross-inclusion and a conversion
 engine that preserves members' work and folder placements on leave/delete) are
-implemented. Planned per the design doc: installable PWA, single container on
-fly.io.
+implemented. PWA (service worker with an update-reload toast and NetworkOnly
+API; installability pending app icons) and single-container fly.io deploy
+(Dagger→GHCR→Fly, one always-on machine with a volume for SQLite) are
+implemented.
 
 ## Development
 
