@@ -200,3 +200,41 @@ func (m *Bandwidth) Release(
 		WithExposedPort(8080).
 		WithEntrypoint([]string{"bandwidth"})
 }
+
+// Publish builds the production container and pushes it to a registry as
+// both :version and :latest, returning the published refs. Mirrors the
+// release image; auth is applied when credentials are supplied.
+func (m *Bandwidth) Publish(
+	ctx context.Context,
+	// +ignore=["**/node_modules", "frontend/dist", "tmp", "bin", "data", ".git"]
+	source *dagger.Directory,
+	// Container registry address (e.g. ghcr.io/jwhumphries/bandwidth)
+	// +optional
+	// +default="ghcr.io/jwhumphries/bandwidth"
+	registry string,
+	// +optional
+	// +default="dev"
+	version string,
+	// Registry username
+	// +optional
+	registryUser string,
+	// Registry password (as a secret)
+	// +optional
+	registryPassword *dagger.Secret,
+) (string, error) {
+	if registry == "" {
+		registry = "ghcr.io/jwhumphries/bandwidth"
+	}
+	container := m.Release(source, version)
+	if registryUser != "" && registryPassword != nil {
+		container = container.WithRegistryAuth(registry, registryUser, registryPassword)
+	}
+	versionRef, err := container.Publish(ctx, fmt.Sprintf("%s:%s", registry, version))
+	if err != nil {
+		return "", fmt.Errorf("publish version tag: %w", err)
+	}
+	if _, err := container.Publish(ctx, fmt.Sprintf("%s:latest", registry)); err != nil {
+		return "", fmt.Errorf("publish latest tag: %w", err)
+	}
+	return versionRef, nil
+}

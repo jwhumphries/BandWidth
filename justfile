@@ -51,6 +51,10 @@ build version=`git rev-parse --short HEAD`:
     mkdir -p tmp
     dagger call release --source . --version {{version}} export --path tmp/bandwidth-image.tar
 
+# Build and push the production image to a registry (CI uses GH credentials)
+publish registry="ghcr.io/jwhumphries/bandwidth" version=`git rev-parse --short HEAD`:
+    dagger call publish --source . --registry {{registry}} --version {{version}}
+
 # Remove build artifacts
 clean:
     rm -rf tmp frontend/dist frontend/node_modules
