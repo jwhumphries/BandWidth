@@ -9,8 +9,10 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  # GHCR requires lowercase image paths; this repo is mixed-case
+  # (jwhumphries/BandWidth), so the registry ref is hardcoded lowercase to
+  # match fly.toml and the justfile.
+  IMAGE: ghcr.io/jwhumphries/bandwidth
   DAGGER_NO_NAG: "1"
 
 jobs:
@@ -33,7 +35,7 @@ jobs:
       - name: Log in to GHCR
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -41,7 +43,7 @@ jobs:
         run: |
           dagger call publish \
             --source . \
-            --registry "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" \
+            --registry "${{ env.IMAGE }}" \
             --version "${{ github.sha }}" \
             --registry-user "${{ github.actor }}" \
             --registry-password env:GITHUB_TOKEN
