@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Link, useParams} from 'react-router';
 import BandFolderSidebar from '../components/bands/BandFolderSidebar';
 import BandSettings from '../components/bands/BandSettings';
@@ -12,6 +12,11 @@ export default function BandPage() {
   const id = Number(idParam);
   const {data: band, isPending, isError, error, refetch} = useBand(id);
   const [folderId, setFolderId] = useState<number | null>(null);
+
+  // Switching bands must clear any folder selected in the previous band.
+  useEffect(() => {
+    setFolderId(null);
+  }, [id]);
 
   if (isPending) {
     return (

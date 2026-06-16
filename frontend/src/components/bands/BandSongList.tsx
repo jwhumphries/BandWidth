@@ -23,9 +23,12 @@ export default function BandSongList({
   const visible =
     folder === null || folder === undefined
       ? songs
-      : folder.songIds
-          .map(id => songs.find(s => s.id === id))
-          .filter((s): s is (typeof songs)[number] => s !== undefined);
+      : (() => {
+          const byID = new Map(songs.map(s => [s.id, s]));
+          return folder.songIds
+            .map(id => byID.get(id))
+            .filter((s): s is (typeof songs)[number] => s !== undefined);
+        })();
 
   return (
     <section className="card bg-base-100 shadow">
