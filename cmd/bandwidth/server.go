@@ -184,6 +184,10 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	invites.POST("/:id/decline", api.DeclineInvite)
 	invites.POST("/link", api.JoinByLink)
 
+	// Public: name the band behind an invite token so /join can show it
+	// before the visitor authenticates. Rate-limited like other token paths.
+	apiGroup.GET("/invites/link/:token", api.PreviewInviteLink, authLimiter)
+
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
 		return nil, err

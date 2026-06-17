@@ -187,3 +187,18 @@ func (a *API) JoinByLink(c *echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]any{"bandId": bandID})
 }
+
+// PreviewInviteLink returns the band name for a pending invite token,
+// without joining and without authentication, so the /join page can name
+// the band before the visitor logs in.
+func (a *API) PreviewInviteLink(c *echo.Context) error {
+	token := c.Param("token")
+	if token == "" {
+		return echo.NewHTTPError(http.StatusNotFound, "invite not found")
+	}
+	name, err := a.Repo.BandNameByLinkToken(token)
+	if err != nil {
+		return notFoundOr(err, "invite")
+	}
+	return c.JSON(http.StatusOK, map[string]any{"bandName": name})
+}
