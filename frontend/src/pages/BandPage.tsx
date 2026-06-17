@@ -1,3 +1,4 @@
+import {ArrowLeft} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import {Link, useParams} from 'react-router';
 import BandFolderSidebar from '../components/bands/BandFolderSidebar';
@@ -45,8 +46,19 @@ export default function BandPage() {
   const canEdit = band.myRole !== 'viewer';
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold">{band.name}</h1>
-      <div className="flex flex-col gap-4 sm:flex-row">
+      <div className="flex flex-col gap-2">
+        <Link
+          to="/bands"
+          className="text-base-content/60 hover:text-base-content inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Bands
+        </Link>
+        <h1 className="font-display text-3xl font-bold tracking-tight">
+          {band.name}
+        </h1>
+      </div>
+      <div className="flex flex-col gap-6 sm:flex-row">
         <BandFolderSidebar
           bandId={band.id}
           canEdit={canEdit}

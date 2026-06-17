@@ -1,28 +1,44 @@
+import {AudioLines} from 'lucide-react';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
-import {Link, useNavigate} from 'react-router';
+import {Link, useNavigate, useSearchParams} from 'react-router';
 import {useSignup} from '../hooks/auth';
+import {safeRedirect} from '../lib/redirect';
 
 export default function SignupPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = safeRedirect(params.get('redirect'));
+  const redirectQuery =
+    redirect === '/' ? '' : `?redirect=${encodeURIComponent(redirect)}`;
   const signup = useSignup();
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     signup.mutate(
       {username, email, password},
-      {onSuccess: () => void navigate('/')},
+      {onSuccess: () => void navigate(redirect)},
     );
   };
 
   return (
     <main className="hero bg-base-200 min-h-screen">
       <div className="hero-content w-full max-w-sm flex-col">
-        <h1 className="text-4xl font-bold">BandWidth</h1>
-        <form className="card bg-base-100 w-full p-6 shadow" onSubmit={submit}>
+        <div className="flex flex-col items-center gap-3">
+          <span className="bg-primary text-primary-content grid size-14 place-items-center rounded-box shadow-lg">
+            <AudioLines className="size-8" strokeWidth={2.25} />
+          </span>
+          <h1 className="font-display text-4xl font-bold tracking-tight">
+            Band<span className="text-primary">Width</span>
+          </h1>
+        </div>
+        <form
+          className="card bg-base-100 border-base-300/60 w-full border p-6 shadow-xl"
+          onSubmit={submit}
+        >
           <fieldset className="fieldset">
             <label className="label" htmlFor="username">
               Username
@@ -72,7 +88,7 @@ export default function SignupPage() {
         </form>
         <p className="text-sm">
           Already have an account?{' '}
-          <Link className="link" to="/login">
+          <Link className="link" to={`/login${redirectQuery}`}>
             Log in
           </Link>
         </p>

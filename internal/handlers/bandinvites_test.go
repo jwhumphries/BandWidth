@@ -24,7 +24,44 @@ func newInvitesAPI(t *testing.T) (*echo.Echo, *API) {
 	inv.POST("/:id/accept", api.AcceptInvite)
 	inv.POST("/:id/decline", api.DeclineInvite)
 	inv.POST("/link", api.JoinByLink)
+	e.GET("/api/invites/link/:token", api.PreviewInviteLink)
 	return e, api
+}
+
+func TestPreviewInviteLink(t *testing.T) {
+	e, _ := newInvitesAPI(t)
+	alice := signupAndCookie(t, e, "alice")
+	band := createBandFor(t, e, alice, "The Quietones")
+
+	// Create a link invite as admin.
+	rec := jsonReq(e, http.MethodPost, fmt.Sprintf("/api/bands/%d/invites", band),
+		`{"link":true,"role":"editor"}`, alice)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("create link: %d %s", rec.Code, rec.Body.String())
+	}
+	var link struct {
+		Token string `json:"token"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &link); err != nil || link.Token == "" {
+		t.Fatalf("link body: %s (%v)", rec.Body.String(), err)
+	}
+
+	// Preview works WITHOUT a session (nil cookie) and returns the band name.
+	rec = jsonReq(e, http.MethodGet, "/api/invites/link/"+link.Token, "", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("preview: %d %s", rec.Code, rec.Body.String())
+	}
+	var body struct {
+		BandName string `json:"bandName"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil || body.BandName != "The Quietones" {
+		t.Fatalf("preview body: %s (%v)", rec.Body.String(), err)
+	}
+
+	// Bogus token 404s.
+	if rec := jsonReq(e, http.MethodGet, "/api/invites/link/bogus", "", nil); rec.Code != http.StatusNotFound {
+		t.Fatalf("bogus preview: %d, want 404", rec.Code)
+	}
 }
 
 func TestDirectInviteFlow(t *testing.T) {

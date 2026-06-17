@@ -23,6 +23,7 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/join/:token" element={<JoinPage />} />
         <Route element={<RequireAuth />}>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />
@@ -31,7 +32,6 @@ export default function App() {
             <Route path="/bands" element={<BandsPage />} />
             <Route path="/bands/:id" element={<BandPage />} />
             <Route path="/bands/:id/songs/:songId" element={<BandSongPage />} />
-            <Route path="/join/:token" element={<JoinPage />} />
           </Route>
         </Route>
       </Routes>
