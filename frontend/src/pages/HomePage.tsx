@@ -123,8 +123,10 @@ export default function HomePage() {
                   Add your first song
                 </button>
               </>
+            ) : searching ? (
+              <p>No songs match “{search.trim()}”.</p>
             ) : (
-              <p>No songs here.</p>
+              <p>No songs in this folder yet.</p>
             )}
           </div>
         ) : selectedFolder && !searching ? (

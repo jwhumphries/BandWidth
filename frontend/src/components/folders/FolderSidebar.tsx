@@ -87,7 +87,7 @@ function SortableFolderRow({
         </button>
       )}
       <button
-        className="btn btn-ghost btn-xs btn-square opacity-0 transition-opacity group-hover:opacity-100"
+        className="btn btn-ghost btn-xs btn-square opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
         aria-label={`Rename ${folder.name}`}
         onClick={() => {
           submitted.current = false;
@@ -98,7 +98,7 @@ function SortableFolderRow({
         <Pencil className="size-3.5" />
       </button>
       <button
-        className="btn btn-ghost btn-xs btn-square hover:text-error opacity-0 transition-opacity group-hover:opacity-100"
+        className="btn btn-ghost btn-xs btn-square hover:text-error opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
         aria-label={`Delete ${folder.name}`}
         onClick={onDelete}
       >
@@ -138,6 +138,7 @@ export default function FolderSidebar({
     const ids = folders.map(f => f.id);
     const from = ids.indexOf(Number(active.id));
     const to = ids.indexOf(Number(over.id));
+    if (from === -1 || to === -1) return;
     ids.splice(to, 0, ...ids.splice(from, 1));
     reorderFolders.mutate(ids);
   };

@@ -58,6 +58,7 @@ export default function SortableSongList({
     const ids = songs.map(s => s.id);
     const from = ids.indexOf(Number(active.id));
     const to = ids.indexOf(Number(over.id));
+    if (from === -1 || to === -1) return;
     ids.splice(to, 0, ...ids.splice(from, 1));
     onReorder(ids);
   };

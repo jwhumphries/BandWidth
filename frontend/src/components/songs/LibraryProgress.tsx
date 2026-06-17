@@ -24,7 +24,7 @@ export default function LibraryProgress({songs}: {songs: SongListItem[]}) {
   return (
     <div className="border-base-300/60 bg-base-100 rounded-box border p-4">
       <div className="flex h-2.5 overflow-hidden rounded-selector">
-        {order.map(({status}) =>
+        {order.map(({status, label}) =>
           counts[status] > 0 ? (
             <div
               key={status}
@@ -33,7 +33,7 @@ export default function LibraryProgress({songs}: {songs: SongListItem[]}) {
                 width: `${(counts[status] / total) * 100}%`,
                 backgroundColor: `var(--status-${status.replace('_', '-')})`,
               }}
-              title={`${counts[status]} ${status}`}
+              title={`${counts[status]} ${label}`}
             />
           ) : null,
         )}
