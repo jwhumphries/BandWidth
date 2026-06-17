@@ -90,6 +90,33 @@ export function useLogBandRehearsal(bandId: number, songId: number) {
   });
 }
 
+// List-scoped variants: the band view logs/undoes a rehearsal for any row
+// without opening the song. Payload carries the songId.
+export function useLogBandRehearsalInList(bandId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<RehearsalStats, ApiError, {songId: number; date: string}>({
+    mutationFn: ({songId, date}) =>
+      api.put<RehearsalStats>(
+        `/api/bands/${bandId}/songs/${songId}/rehearsal`,
+        {date},
+      ),
+    onSuccess: (_data, {songId}) =>
+      invalidateBandSong(queryClient, bandId, songId),
+  });
+}
+
+export function useUndoBandRehearsalInList(bandId: number) {
+  const queryClient = useQueryClient();
+  return useMutation<RehearsalStats, ApiError, {songId: number; date: string}>({
+    mutationFn: ({songId, date}) =>
+      api.delete<RehearsalStats>(
+        `/api/bands/${bandId}/songs/${songId}/rehearsal/${date}`,
+      ),
+    onSuccess: (_data, {songId}) =>
+      invalidateBandSong(queryClient, bandId, songId),
+  });
+}
+
 export function useCreateBandResource(bandId: number, songId: number) {
   const queryClient = useQueryClient();
   return useMutation<Resource, ApiError, {url: string; label: string}>({
