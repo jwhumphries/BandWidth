@@ -1,8 +1,13 @@
 import {screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {Route, Routes} from 'react-router';
+import {Route, Routes, useLocation} from 'react-router';
 import {renderWithProviders} from '../test/utils';
 import RequireAuth from './RequireAuth';
+
+function LocationProbe() {
+  const loc = useLocation();
+  return <span data-testid="loc">{loc.pathname + loc.search}</span>;
+}
 
 describe('RequireAuth', () => {
   beforeEach(() => {
@@ -16,19 +21,22 @@ describe('RequireAuth', () => {
     );
   });
 
-  it('redirects to /login when unauthenticated', async () => {
+  it('redirects to /login with a redirect param when unauthenticated', async () => {
     renderWithProviders(
       <Routes>
-        <Route path="/login" element={<p>login page</p>} />
+        <Route path="/login" element={<LocationProbe />} />
         <Route element={<RequireAuth />}>
-          <Route path="/" element={<p>secret home</p>} />
+          <Route path="/bands/3" element={<p>secret</p>} />
         </Route>
       </Routes>,
+      {route: '/bands/3'},
     );
     await waitFor(() =>
-      expect(screen.getByText(/login page/i)).toBeInTheDocument(),
+      expect(screen.getByTestId('loc')).toHaveTextContent(
+        '/login?redirect=%2Fbands%2F3',
+      ),
     );
-    expect(screen.queryByText(/secret home/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('secret')).not.toBeInTheDocument();
   });
 
   it('offers a retry instead of redirecting on server errors', async () => {

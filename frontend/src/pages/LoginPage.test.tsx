@@ -1,6 +1,7 @@
 import {screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {Route, Routes} from 'react-router';
 import {renderWithProviders} from '../test/utils';
 import LoginPage from './LoginPage';
 
@@ -76,6 +77,35 @@ describe('LoginPage', () => {
     renderWithProviders(<LoginPage />);
     await waitFor(() => expect(fetch).toHaveBeenCalled());
     expect(screen.queryByText(/forgot password/i)).not.toBeInTheDocument();
+  });
+
+  it('returns to the redirect target after login', async () => {
+    vi.mocked(fetch).mockImplementation((input: RequestInfo | URL) => {
+      if (String(input).includes('/api/auth/login')) {
+        return Promise.resolve(
+          jsonResponse(200, {
+            id: 1,
+            username: 'alice',
+            email: 'a@b.c',
+            totpEnabled: false,
+          }),
+        );
+      }
+      return Promise.resolve(jsonResponse(200, {passwordReset: false}));
+    });
+    renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/join/abc" element={<p>join page</p>} />
+      </Routes>,
+      {route: '/login?redirect=%2Fjoin%2Fabc'},
+    );
+    await userEvent.type(screen.getByLabelText(/username or email/i), 'alice');
+    await userEvent.type(screen.getByLabelText(/^password$/i), 'pw');
+    await userEvent.click(screen.getByRole('button', {name: /log in/i}));
+    await waitFor(() =>
+      expect(screen.getByText('join page')).toBeInTheDocument(),
+    );
   });
 
   it('shows the forgot-password link when the feature is on', async () => {

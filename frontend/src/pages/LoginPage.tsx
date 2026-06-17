@@ -1,8 +1,9 @@
 import {AudioLines} from 'lucide-react';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
-import {Link, useNavigate} from 'react-router';
+import {Link, useNavigate, useSearchParams} from 'react-router';
 import {useAuthFeatures, useLogin} from '../hooks/auth';
+import {safeRedirect} from '../lib/redirect';
 
 export default function LoginPage() {
   const [login, setLogin] = useState('');
@@ -10,6 +11,10 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [totpRequired, setTotpRequired] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = safeRedirect(params.get('redirect'));
+  const redirectQuery =
+    redirect === '/' ? '' : `?redirect=${encodeURIComponent(redirect)}`;
   const loginMutation = useLogin();
   const {data: features} = useAuthFeatures();
 
@@ -18,7 +23,7 @@ export default function LoginPage() {
     loginMutation.mutate(
       {login, password, ...(totpCode ? {totpCode} : {})},
       {
-        onSuccess: () => void navigate('/'),
+        onSuccess: () => void navigate(redirect),
         onError: err => {
           if ((err.body as {totpRequired?: boolean} | null)?.totpRequired) {
             setTotpRequired(true);
@@ -105,7 +110,7 @@ export default function LoginPage() {
         </form>
         <p className="text-sm">
           No account?{' '}
-          <Link className="link" to="/signup">
+          <Link className="link" to={`/signup${redirectQuery}`}>
             Sign up
           </Link>
           {features?.passwordReset && (

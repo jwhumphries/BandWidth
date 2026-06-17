@@ -1,21 +1,26 @@
 import {AudioLines} from 'lucide-react';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
-import {Link, useNavigate} from 'react-router';
+import {Link, useNavigate, useSearchParams} from 'react-router';
 import {useSignup} from '../hooks/auth';
+import {safeRedirect} from '../lib/redirect';
 
 export default function SignupPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = safeRedirect(params.get('redirect'));
+  const redirectQuery =
+    redirect === '/' ? '' : `?redirect=${encodeURIComponent(redirect)}`;
   const signup = useSignup();
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     signup.mutate(
       {username, email, password},
-      {onSuccess: () => void navigate('/')},
+      {onSuccess: () => void navigate(redirect)},
     );
   };
 
@@ -83,7 +88,7 @@ export default function SignupPage() {
         </form>
         <p className="text-sm">
           Already have an account?{' '}
-          <Link className="link" to="/login">
+          <Link className="link" to={`/login${redirectQuery}`}>
             Log in
           </Link>
         </p>
