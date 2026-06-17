@@ -108,7 +108,10 @@ func TestBandNameByLinkToken(t *testing.T) {
 	}
 
 	// Revoked link stops resolving.
-	invites, _ := repo.InvitesForBand(band.ID)
+	invites, err := repo.InvitesForBand(band.ID)
+	if err != nil || len(invites) != 1 {
+		t.Fatalf("InvitesForBand: %v (%v)", invites, err)
+	}
 	if err := repo.RevokeInvite(invites[0].ID, band.ID); err != nil {
 		t.Fatalf("RevokeInvite: %v", err)
 	}

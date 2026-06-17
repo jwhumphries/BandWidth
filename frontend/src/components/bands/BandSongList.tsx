@@ -109,7 +109,7 @@ export default function BandSongList({
 
       {undo && (
         <div className="toast toast-center">
-          <div className="alert alert-success">
+          <div role="status" className="alert alert-success">
             <span>Rehearsed &quot;{undo.title}&quot;</span>
             <button
               className="btn btn-ghost btn-sm"

@@ -149,7 +149,7 @@ export default function HomePage() {
 
         {undo && (
           <div className="toast toast-center">
-            <div className="alert alert-success">
+            <div role="status" className="alert alert-success">
               <span>Practiced &quot;{undo.title}&quot;</span>
               <button
                 className="btn btn-ghost btn-sm"

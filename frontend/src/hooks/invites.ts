@@ -14,6 +14,7 @@ export function useLinkPreview(token: string) {
   return useQuery<{bandName: string}, ApiError>({
     queryKey: ['invite-preview', token],
     queryFn: () => api.get<{bandName: string}>(`/api/invites/link/${token}`),
+    enabled: token !== '',
     retry: false,
     staleTime: 60 * 1000,
   });
