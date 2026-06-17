@@ -1,2 +1,176 @@
 @import 'tailwindcss';
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes:
+    bandwidth --default --prefersdark,
+    bandwidth-light;
+}
+
+/* ── Dark-first studio console theme ───────────────────────────────────── */
+@plugin "daisyui/theme" {
+  name: 'bandwidth';
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(21% 0.013 256);
+  --color-base-200: oklch(17% 0.013 256);
+  --color-base-300: oklch(27% 0.015 256);
+  --color-base-content: oklch(92% 0.008 256);
+
+  --color-primary: oklch(82% 0.149 78);
+  --color-primary-content: oklch(26% 0.05 78);
+  --color-secondary: oklch(72% 0.13 200);
+  --color-secondary-content: oklch(20% 0.03 200);
+  --color-accent: oklch(70% 0.15 295);
+  --color-accent-content: oklch(98% 0.01 295);
+  --color-neutral: oklch(30% 0.012 256);
+  --color-neutral-content: oklch(92% 0.008 256);
+
+  --color-info: oklch(72% 0.12 235);
+  --color-info-content: oklch(20% 0.03 235);
+  --color-success: oklch(80% 0.17 152);
+  --color-success-content: oklch(22% 0.05 152);
+  --color-warning: oklch(82% 0.149 78);
+  --color-warning-content: oklch(26% 0.05 78);
+  --color-error: oklch(66% 0.2 22);
+  --color-error-content: oklch(98% 0.01 22);
+
+  --radius-selector: 1rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ── Warm-paper light theme (toggle alternative) ──────────────────────── */
+@plugin "daisyui/theme" {
+  name: 'bandwidth-light';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(99% 0.004 95);
+  --color-base-200: oklch(96% 0.006 95);
+  --color-base-300: oklch(91% 0.008 95);
+  --color-base-content: oklch(26% 0.012 260);
+
+  --color-primary: oklch(68% 0.155 64);
+  --color-primary-content: oklch(99% 0.01 95);
+  --color-secondary: oklch(58% 0.12 205);
+  --color-secondary-content: oklch(99% 0.01 205);
+  --color-accent: oklch(55% 0.16 295);
+  --color-accent-content: oklch(99% 0.01 295);
+  --color-neutral: oklch(28% 0.012 260);
+  --color-neutral-content: oklch(98% 0.005 95);
+
+  --color-info: oklch(58% 0.12 235);
+  --color-info-content: oklch(99% 0.01 235);
+  --color-success: oklch(60% 0.16 152);
+  --color-success-content: oklch(99% 0.01 152);
+  --color-warning: oklch(72% 0.15 64);
+  --color-warning-content: oklch(26% 0.05 64);
+  --color-error: oklch(58% 0.2 22);
+  --color-error-content: oklch(99% 0.01 22);
+
+  --radius-selector: 1rem;
+  --radius-field: 0.625rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* ── Typography ───────────────────────────────────────────────────────── */
+@theme {
+  --font-sans: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    'Bricolage Grotesque', 'Hanken Grotesk', ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, 'SFMono-Regular', monospace;
+}
+
+/* ── Status-progression ramp (Not learned → Learning → Learned → Nailed) ─ */
+[data-theme='bandwidth'] {
+  --status-not-learned: oklch(62% 0.015 256);
+  --status-learning: oklch(74% 0.13 245);
+  --status-learned: oklch(70% 0.16 295);
+  --status-nailed: oklch(80% 0.17 152);
+}
+[data-theme='bandwidth-light'] {
+  --status-not-learned: oklch(55% 0.015 256);
+  --status-learning: oklch(55% 0.14 245);
+  --status-learned: oklch(52% 0.18 295);
+  --status-nailed: oklch(56% 0.17 152);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+  }
+  body {
+    /* Layered atmosphere: a dim spotlight wash over the dark base so the
+       page reads like a stage rather than a flat fill. */
+    background-image:
+      radial-gradient(
+        ellipse 80% 50% at 50% -10%,
+        color-mix(in oklab, var(--color-primary) 12%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 100% 0%,
+        color-mix(in oklab, var(--color-accent) 9%, transparent),
+        transparent 60%
+      );
+    background-attachment: fixed;
+  }
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer components {
+  /* Status chip: a quiet dot + label, tinted by the progression ramp. */
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.6rem 0.2rem 0.5rem;
+    border-radius: var(--radius-selector);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--chip);
+    background-color: color-mix(in oklab, var(--chip) 14%, transparent);
+    border: 1px solid color-mix(in oklab, var(--chip) 28%, transparent);
+  }
+  .status-chip::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 999px;
+    background-color: var(--chip);
+    box-shadow: 0 0 8px color-mix(in oklab, var(--chip) 70%, transparent);
+  }
+  .status-chip-not_learned {
+    --chip: var(--status-not-learned);
+  }
+  .status-chip-learning {
+    --chip: var(--status-learning);
+  }
+  .status-chip-learned {
+    --chip: var(--status-learned);
+  }
+  .status-chip-nailed {
+    --chip: var(--status-nailed);
+  }
+}

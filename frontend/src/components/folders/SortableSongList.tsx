@@ -6,6 +6,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
+import {GripVertical} from 'lucide-react';
 import SongRow from '../songs/SongRow';
 import type {SongListItem} from '../../lib/types';
 
@@ -25,12 +26,12 @@ function SortableSongRow({
       className="flex items-center gap-1"
     >
       <button
-        className="cursor-grab touch-none px-1"
+        className="text-base-content/30 hover:text-base-content/70 cursor-grab touch-none px-1"
         aria-label={`Reorder ${song.title}`}
         {...attributes}
         {...listeners}
       >
-        ⠿
+        <GripVertical className="size-4" />
       </button>
       <div className="min-w-0 flex-1">
         <ul>

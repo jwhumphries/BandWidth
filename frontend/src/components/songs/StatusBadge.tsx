@@ -1,13 +1,13 @@
 import type {SongStatus} from '../../lib/types';
 
-const styles: Record<SongStatus, {label: string; className: string}> = {
-  not_learned: {label: 'Not learned', className: 'badge-ghost'},
-  learning: {label: 'Learning', className: 'badge-warning'},
-  learned: {label: 'Learned', className: 'badge-info'},
-  nailed: {label: 'Nailed!', className: 'badge-success'},
+const labels: Record<SongStatus, string> = {
+  not_learned: 'Not learned',
+  learning: 'Learning',
+  learned: 'Learned',
+  nailed: 'Nailed!',
 };
 
 export default function StatusBadge({status}: {status: SongStatus}) {
-  const s = styles[status] ?? styles.not_learned;
-  return <span className={`badge ${s.className}`}>{s.label}</span>;
+  const label = labels[status] ?? labels.not_learned;
+  return <span className={`status-chip status-chip-${status}`}>{label}</span>;
 }
