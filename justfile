@@ -2,9 +2,21 @@
 default:
     @just --list
 
-# Start the local dev loop (Go API :8080 + Vite :3000)
+# Start the dev environment with hot-reload (Go API :8080 + Vite :3000)
 dev:
-    ./scripts/develop.sh
+    docker compose up --build
+
+# Stop the dev environment
+dev-stop:
+    docker compose down
+
+# Follow dev environment logs
+dev-logs:
+    docker compose logs -f
+
+# Open a shell in the dev container
+dev-shell:
+    docker compose exec dev sh
 
 # Run all checks in parallel inside one Dagger session
 check:
@@ -58,3 +70,7 @@ publish registry="ghcr.io/jwhumphries/bandwidth" version=`git rev-parse --short 
 # Remove build artifacts
 clean:
     rm -rf tmp frontend/dist frontend/node_modules
+
+# Remove dev containers and named volumes
+clean-docker:
+    docker compose down -v

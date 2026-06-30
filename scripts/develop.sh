@@ -1,19 +1,26 @@
-#!/usr/bin/env bash
-# Local dev loop: Go API via air (:8080) + Vite dev server (:3000).
+#!/bin/sh
+# Container dev loop: Go API via air (:8080) + Vite dev server (:3000).
 # Vite proxies /api and /healthz to the Go server; open http://localhost:3000.
-set -euo pipefail
-cd "$(dirname "$0")/.."
+set -e
 
-if ! command -v air >/dev/null 2>&1; then
-  echo "air not found — install with: go install github.com/air-verse/air@latest" >&2
-  exit 1
-fi
+cd /app
 
+echo "==> Installing frontend dependencies..."
+cd frontend
+bun install
+cd ..
 
-(cd frontend && bun install)
+echo "==> Starting Vite dev server (:3000)..."
+cd frontend
+bun run dev &
+VITE_PID=$!
+cd ..
 
-trap 'kill 0' EXIT
+# Give Vite a moment to start
+sleep 2
 
-(cd frontend && exec bun run dev) &
-air &
-wait
+echo "==> Starting Go backend with Air hot-reload (:8080)..."
+air -c .air.toml
+
+# If Air exits, clean up Vite
+kill "$VITE_PID" 2>/dev/null || true

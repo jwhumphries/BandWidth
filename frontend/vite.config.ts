@@ -45,6 +45,9 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Listen on 0.0.0.0 so the published port is reachable from the host
+    // when running inside the dev container.
+    host: true,
     port: 3000,
     proxy: {
       '/api': 'http://localhost:8080',
