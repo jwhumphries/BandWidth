@@ -28,6 +28,7 @@ function NavItem({
     <NavLink
       to={to}
       end={to === '/'}
+      aria-label={label}
       className={({isActive}) =>
         `group relative flex items-center gap-2 rounded-field px-3 py-2 text-sm font-medium transition-colors ${
           isActive
@@ -109,6 +110,7 @@ export default function Layout() {
               className="btn btn-ghost btn-sm gap-2"
               onClick={() => logout.mutate()}
               disabled={logout.isPending}
+              aria-label="Log out"
             >
               <LogOut className="size-4" />
               <span className="hidden sm:inline">Log out</span>

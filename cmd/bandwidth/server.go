@@ -185,8 +185,13 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	invites.POST("/link", api.JoinByLink)
 
 	// Public: name the band behind an invite token so /join can show it
-	// before the visitor authenticates. Rate-limited like other token paths.
-	apiGroup.GET("/invites/link/:token", api.PreviewInviteLink, authLimiter)
+	// before the visitor authenticates. Gets its own per-IP budget so the
+	// pre-auth /join preview doesn't burn the signup/login/reset allowance
+	// on a shared IP.
+	previewLimiter := middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(
+		middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 5, ExpiresIn: 3 * time.Minute},
+	))
+	apiGroup.GET("/invites/link/:token", api.PreviewInviteLink, previewLimiter)
 
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {

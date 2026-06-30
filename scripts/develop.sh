@@ -19,6 +19,12 @@ cd ..
 # Give Vite a moment to start
 sleep 2
 
+# Bail out if Vite already died so we don't run a half-up dev loop.
+if ! kill -0 "$VITE_PID" 2>/dev/null; then
+  echo "==> Vite dev server failed to start" >&2
+  exit 1
+fi
+
 echo "==> Starting Go backend with Air hot-reload (:8080)..."
 air -c .air.toml
 

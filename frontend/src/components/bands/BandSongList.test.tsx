@@ -85,9 +85,17 @@ describe('BandSongList', () => {
         ),
       ).toBe(true);
     });
-    expect(
-      await screen.findByRole('button', {name: /undo/i}),
-    ).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', {name: /undo/i}));
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls;
+      expect(
+        calls.some(
+          ([input, init]) =>
+            String(input).includes('/api/bands/3/songs/1/rehearsal/') &&
+            init?.method === 'DELETE',
+        ),
+      ).toBe(true);
+    });
   });
 
   it('hides the rehearsed button from viewers', async () => {

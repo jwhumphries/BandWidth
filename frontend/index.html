@@ -8,6 +8,15 @@
       name="description"
       content="Practice tracking for musicians and bands"
     />
+    <script>
+      // Apply the persisted theme before first paint to avoid a flash of the
+      // default dark theme when the visitor has chosen light.
+      try {
+        var t = localStorage.getItem('bandwidth-theme');
+        document.documentElement.dataset.theme =
+          t === 'bandwidth-light' ? 'bandwidth-light' : 'bandwidth';
+      } catch (e) {}
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

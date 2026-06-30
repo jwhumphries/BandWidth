@@ -34,6 +34,7 @@ export default function BandSongRow({
         </span>
         {canEdit && (
           <button
+            type="button"
             className="btn btn-primary btn-sm gap-1.5"
             onClick={() => onRehearsed(song.id, localToday())}
           >

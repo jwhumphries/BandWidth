@@ -85,7 +85,8 @@ export default function BandsPage() {
                   {band.role}
                 </span>
                 <span className="text-base-content/55 font-mono text-xs">
-                  {band.memberCount} members
+                  {band.memberCount}{' '}
+                  {band.memberCount === 1 ? 'member' : 'members'}
                 </span>
                 <ChevronRight className="text-base-content/30 group-hover:text-base-content/60 size-4 transition-colors" />
               </Link>

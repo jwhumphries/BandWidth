@@ -87,7 +87,7 @@ function SortableFolderRow({
         </button>
       )}
       <button
-        className="btn btn-ghost btn-xs btn-square opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        className="btn btn-ghost btn-xs btn-square opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
         aria-label={`Rename ${folder.name}`}
         onClick={() => {
           submitted.current = false;
@@ -98,7 +98,7 @@ function SortableFolderRow({
         <Pencil className="size-3.5" />
       </button>
       <button
-        className="btn btn-ghost btn-xs btn-square hover:text-error opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+        className="btn btn-ghost btn-xs btn-square hover:text-error opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
         aria-label={`Delete ${folder.name}`}
         onClick={onDelete}
       >
