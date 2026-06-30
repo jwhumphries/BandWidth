@@ -12,8 +12,9 @@ primary_region = "ord"
   BANDWIDTH_DB_PATH = "/data/bandwidth.db"
   BANDWIDTH_SECURE_COOKIES = "true"
   BANDWIDTH_LOG_LEVEL = "info"
-  # BANDWIDTH_BASE_URL is set per-app below; update it to the real hostname.
-  BANDWIDTH_BASE_URL = "https://bandwidth.fly.dev"
+  # Public hostname (custom domain via Cloudflare CNAME -> Fly); used in
+  # invite / password-reset links.
+  BANDWIDTH_BASE_URL = "https://bandwidth.jwhlabs.dev"
 
 [[mounts]]
   source = "bandwidth_data"
