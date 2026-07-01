@@ -141,9 +141,26 @@ func (r *Repo) ReorderBandFolders(bandID uint, folderIDs []uint) error {
 	return r.reorderFolders(bandSubj(bandID), folderIDs)
 }
 
+// reorderFolders applies a new order. The request must name every one of the
+// subject's folders exactly once — a partial or duplicated list would leave
+// stale or colliding positions behind.
 func (r *Repo) reorderFolders(s subj, folderIDs []uint) error {
+	seen := make(map[uint]struct{}, len(folderIDs))
+	for _, fid := range folderIDs {
+		if _, dup := seen[fid]; dup {
+			return fmt.Errorf("folder %d listed twice: %w", fid, gorm.ErrRecordNotFound)
+		}
+		seen[fid] = struct{}{}
+	}
 	cond, id := s.ownerScope()
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		var total int64
+		if err := tx.Model(&model.Folder{}).Where(cond, id).Count(&total).Error; err != nil {
+			return err
+		}
+		if total != int64(len(folderIDs)) {
+			return fmt.Errorf("order must name all %d folders: %w", total, gorm.ErrRecordNotFound)
+		}
 		for i, fid := range folderIDs {
 			res := tx.Model(&model.Folder{}).
 				Where("id = ? AND "+cond, fid, id).

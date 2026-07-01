@@ -4,7 +4,9 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {renderWithProviders} from '../test/utils';
 import BandsPage from './BandsPage';
 
-const bands = [{id: 1, name: 'The Quietones', role: 'admin', memberCount: 3}];
+const bands = [
+  {id: 1, name: 'The Quietones', creatorId: 1, role: 'admin', memberCount: 3},
+];
 const invites = [{id: 9, bandId: 2, bandName: 'Loud Ones', role: 'editor'}];
 
 function jsonResponse(status: number, body: unknown) {

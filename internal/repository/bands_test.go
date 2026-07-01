@@ -50,6 +50,9 @@ func TestBandsForUserAndMembers(t *testing.T) {
 	if summaries[0].Role != model.RoleEditor || summaries[0].MemberCount != 2 {
 		t.Errorf("summary = %+v", summaries[0])
 	}
+	if summaries[0].CreatorID != alice.ID {
+		t.Errorf("summary creator = %d, want %d", summaries[0].CreatorID, alice.ID)
+	}
 
 	members, err := repo.MembersForBand(band.ID)
 	if err != nil || len(members) != 2 {

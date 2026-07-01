@@ -173,8 +173,20 @@ func (m *Bandwidth) BuildFrontend(
 		Directory("/app/dist")
 }
 
+// releaseEntrypoint runs as root just long enough to hand the data volume
+// to the app user, then drops privileges. Fly mounts volumes root-owned, so
+// without the chown the nonroot server cannot create its SQLite file.
+const releaseEntrypoint = `#!/bin/sh
+set -e
+if [ -d /data ]; then
+	chown -R app:app /data
+fi
+exec su-exec app bandwidth "$@"
+`
+
 // Release builds the production container: frontend dist embedded in a
-// static Go binary on Alpine with a nonroot user.
+// static Go binary on Alpine, run as a nonroot user via an entrypoint that
+// first chowns the /data volume.
 func (m *Bandwidth) Release(
 	// +ignore=["**/node_modules", "frontend/dist", "tmp", "bin", "data", ".git"]
 	source *dagger.Directory,
@@ -192,13 +204,14 @@ func (m *Bandwidth) Release(
 
 	return dag.Container().
 		From(alpineImage).
-		WithExec([]string{"apk", "add", "--no-cache", "ca-certificates", "tzdata"}).
+		WithExec([]string{"apk", "add", "--no-cache", "ca-certificates", "tzdata", "su-exec"}).
 		WithExec([]string{"addgroup", "-S", "app"}).
 		WithExec([]string{"adduser", "-S", "-G", "app", "app"}).
 		WithFile("/usr/local/bin/bandwidth", binary).
-		WithUser("app").
+		WithNewFile("/usr/local/bin/entrypoint.sh", releaseEntrypoint,
+			dagger.ContainerWithNewFileOpts{Permissions: 0o755}).
 		WithExposedPort(8080).
-		WithEntrypoint([]string{"bandwidth"})
+		WithEntrypoint([]string{"entrypoint.sh"})
 }
 
 // Publish builds the production container and pushes it to a registry as

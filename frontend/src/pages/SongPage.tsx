@@ -73,10 +73,11 @@ export default function SongPage() {
 
   const save = (e: FormEvent) => {
     e.preventDefault();
-    updateSong.mutate(
-      {title, artist, notes},
-      {onSuccess: () => setDirty(false)},
-    );
+    // A band song's title/artist are band-owned; sending them (even
+    // unchanged) makes the server reject the whole update with 403.
+    updateSong.mutate(isBandSong ? {notes} : {title, artist, notes}, {
+      onSuccess: () => setDirty(false),
+    });
   };
 
   return (

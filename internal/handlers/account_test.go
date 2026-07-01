@@ -66,6 +66,11 @@ func TestUpdateMe(t *testing.T) {
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("empty username: %d, want 400", rec.Code)
 	}
+	// Email-shaped username → 400 (would collide with UserByLogin's email match).
+	rec = jsonReq(e, http.MethodPatch, "/api/me", `{"username":"bob@example.com"}`, cookie)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("email-shaped username: %d, want 400", rec.Code)
+	}
 }
 
 func TestChangePassword(t *testing.T) {

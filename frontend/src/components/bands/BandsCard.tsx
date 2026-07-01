@@ -41,6 +41,7 @@ function LeaveButton({band}: {band: BandSummary}) {
 }
 
 export default function BandsCard() {
+  const {data: me} = useMe();
   const {data: bands = []} = useBands();
 
   return (
@@ -65,7 +66,8 @@ export default function BandsCard() {
                   {band.name}
                 </Link>
                 <span className="badge badge-ghost">{band.role}</span>
-                <LeaveButton band={band} />
+                {/* The creator cannot leave — they delete the band instead. */}
+                {me && band.creatorId !== me.id && <LeaveButton band={band} />}
               </li>
             ))}
           </ul>

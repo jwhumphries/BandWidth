@@ -89,6 +89,16 @@ func (r *Repo) annotationForSong(songID uint, s subj) (*model.SongAnnotation, er
 }
 
 func (r *Repo) upsertAnnotation(songID uint, s subj, status *model.SongStatus, notes *string) error {
+	err := r.tryUpsertAnnotation(songID, s, status, notes)
+	if IsDuplicate(err) {
+		// Two first edits raced on the unique index; the row exists now, so
+		// a single retry takes the update path.
+		return r.tryUpsertAnnotation(songID, s, status, notes)
+	}
+	return err
+}
+
+func (r *Repo) tryUpsertAnnotation(songID uint, s subj, status *model.SongStatus, notes *string) error {
 	ann, err := r.annotationForSong(songID, s)
 	switch {
 	case err == nil:

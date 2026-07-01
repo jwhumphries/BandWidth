@@ -15,8 +15,8 @@ before adding features. Implementation plans live in
 All checks and builds run through Dagger. Do not run `go test`,
 `golangci-lint`, `eslint`, `prettier`, `tsc`, or `vitest` directly on the
 host — use `just` (or `dagger call ...`). The exceptions are the dev loop
-(`just dev` runs air and vite on the host) and dependency management
-(`go get`, `bun add`).
+(`just dev` runs air and vite inside a Docker Compose dev container) and
+dependency management (`go get`, `bun add`).
 
 - `just dev` — hot-reload dev loop (Go API :8080, Vite :3000; open :3000)
 - `just check` — lint-go, lint-js, typecheck, format-check, test-go,
@@ -53,8 +53,8 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
   "new version ready" signal as a reload toast. App icons are pending artwork
   (the manifest is complete but icons is empty; not yet installable — see Task 7
   of the PWA plan).
-- `scripts/develop.sh` — the dev loop `just dev` runs (bun install, then
-  vite + air concurrently)
+- `scripts/develop.sh` — the dev loop run inside the Compose dev container
+  by `just dev` (bun install, then vite + air concurrently)
 - `.github/` — GitHub Actions CI (`workflows/ci.yml` calls the same Dagger
   functions as `just`), Renovate config, and `workflows/publish.yml` (publish
   to GHCR via Dagger `Publish` function, then `flyctl deploy --remote-only` to
@@ -64,7 +64,9 @@ host — use `just` (or `dagger call ...`). The exceptions are the dev loop
   `:latest` tags to a registry (default `ghcr.io/jwhumphries/bandwidth`).
 - `fly.toml` — single always-on machine (SQLite cannot multi-attach) with a
   Fly volume mounted at `/data` for the SQLite file; `/healthz` health check;
-  image pulled from GHCR. See `DEPLOY.md` for the one-time setup runbook.
+  image pulled from GHCR. The release entrypoint chowns `/data` to the
+  nonroot app user before starting. See `docs/deploy-checklist.md` for the
+  one-time setup runbook.
 
 ## Configuration
 

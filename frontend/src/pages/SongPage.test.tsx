@@ -111,17 +111,22 @@ describe('SongPage band song', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation((input: RequestInfo | URL) => {
-        const url = String(input);
-        if (url.includes('/api/folders')) {
-          return Promise.resolve(
-            jsonResponse(200, [
-              {id: 1, name: 'Faves', position: 1, songIds: []},
-            ]),
-          );
-        }
-        return Promise.resolve(jsonResponse(200, bandDetail));
-      }),
+      vi
+        .fn()
+        .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+          const url = String(input);
+          if (init?.method === 'PATCH') {
+            return Promise.resolve(jsonResponse(200, bandDetail));
+          }
+          if (url.includes('/api/folders')) {
+            return Promise.resolve(
+              jsonResponse(200, [
+                {id: 1, name: 'Faves', position: 1, songIds: []},
+              ]),
+            );
+          }
+          return Promise.resolve(jsonResponse(200, bandDetail));
+        }),
     );
   });
 
@@ -149,5 +154,25 @@ describe('SongPage band song', () => {
     // The member can still file a band song into their personal folders.
     expect(screen.getByText('Faves')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', {name: 'Faves'})).not.toBeChecked();
+  });
+
+  it('saves personal notes without sending band-owned title/artist', async () => {
+    renderBandSong();
+    await screen.findByDisplayValue('Shared Tune');
+    await userEvent.type(screen.getByLabelText(/notes/i), 'my capo position');
+    await userEvent.click(screen.getByRole('button', {name: /save/i}));
+    await waitFor(() => {
+      const patch = vi
+        .mocked(fetch)
+        .mock.calls.find(([, init]) => init?.method === 'PATCH');
+      expect(patch).toBeDefined();
+      const body = JSON.parse(String(patch![1]?.body)) as Record<
+        string,
+        unknown
+      >;
+      expect(body.notes).toBe('my capo position');
+      expect(body).not.toHaveProperty('title');
+      expect(body).not.toHaveProperty('artist');
+    });
   });
 });

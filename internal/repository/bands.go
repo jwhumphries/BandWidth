@@ -10,6 +10,7 @@ import (
 type BandSummary struct {
 	ID          uint           `json:"id"`
 	Name        string         `json:"name"`
+	CreatorID   uint           `json:"creatorId"`
 	Role        model.BandRole `json:"role"`
 	MemberCount int            `json:"memberCount"`
 }
@@ -50,7 +51,7 @@ func (r *Repo) AddMember(bandID, userID uint, role model.BandRole) error {
 func (r *Repo) BandsForUser(userID uint) ([]BandSummary, error) {
 	summaries := []BandSummary{}
 	err := r.db.Table("band_members").
-		Select(`bands.id, bands.name, band_members.role,
+		Select(`bands.id, bands.name, bands.creator_id, band_members.role,
 			(SELECT COUNT(*) FROM band_members bm WHERE bm.band_id = bands.id) AS member_count`).
 		Joins("JOIN bands ON bands.id = band_members.band_id").
 		Where("band_members.user_id = ?", userID).
