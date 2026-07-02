@@ -61,15 +61,20 @@ func TestUpdateMe(t *testing.T) {
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("conflict: %d, want 409", rec.Code)
 	}
-	// Empty username → 400.
-	rec = jsonReq(e, http.MethodPatch, "/api/me", `{"username":"  "}`, cookie)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("empty username: %d, want 400", rec.Code)
+	// Invalid usernames → 400. Email-shaped ones would collide with
+	// UserByLogin's email match.
+	invalid := []struct {
+		name string
+		body string
+	}{
+		{name: "empty username", body: `{"username":"  "}`},
+		{name: "email-shaped username", body: `{"username":"bob@example.com"}`},
+		{name: "oversized username", body: `{"username":"` + strings.Repeat("u", 101) + `"}`},
 	}
-	// Email-shaped username → 400 (would collide with UserByLogin's email match).
-	rec = jsonReq(e, http.MethodPatch, "/api/me", `{"username":"bob@example.com"}`, cookie)
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("email-shaped username: %d, want 400", rec.Code)
+	for _, tt := range invalid {
+		if rec := jsonReq(e, http.MethodPatch, "/api/me", tt.body, cookie); rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: %d, want 400", tt.name, rec.Code)
+		}
 	}
 }
 
