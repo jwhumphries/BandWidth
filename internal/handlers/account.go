@@ -37,8 +37,9 @@ func (a *API) UpdateMe(c *echo.Context) error {
 	}
 	if req.Username != nil {
 		username := strings.TrimSpace(*req.Username)
-		if username == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "username cannot be empty")
+		if !validUsername(username) {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				"a username of at most 100 characters (without @) is required")
 		}
 		user.Username = username
 	}

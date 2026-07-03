@@ -81,6 +81,7 @@ export type BandRole = 'viewer' | 'editor' | 'admin';
 export interface BandSummary {
   id: number;
   name: string;
+  creatorId: number;
   role: BandRole;
   memberCount: number;
 }

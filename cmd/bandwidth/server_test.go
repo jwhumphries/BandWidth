@@ -113,6 +113,47 @@ func TestCSRFRejectsCrossSite(t *testing.T) {
 	}
 }
 
+func TestSecureHeadersSet(t *testing.T) {
+	e := testServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, req)
+	if got := rec.Header().Get("X-Content-Type-Options"); got != "nosniff" {
+		t.Errorf("X-Content-Type-Options = %q, want nosniff", got)
+	}
+	if got := rec.Header().Get("X-Frame-Options"); got != "SAMEORIGIN" {
+		t.Errorf("X-Frame-Options = %q, want SAMEORIGIN", got)
+	}
+	// SecureCookies is false in tests, so HSTS must NOT be advertised.
+	if got := rec.Header().Get("Strict-Transport-Security"); got != "" {
+		t.Errorf("Strict-Transport-Security = %q, want unset without TLS", got)
+	}
+}
+
+func TestBodyLimitRejectsOversizedRequests(t *testing.T) {
+	e := testServer(t)
+	huge := fmt.Sprintf(`{"username":"a","email":"a@b.c","password":%q}`,
+		strings.Repeat("x", maxBodyBytes))
+	rec := do(e, http.MethodPost, "/api/auth/signup", huge, nil)
+	if rec.Code != http.StatusRequestEntityTooLarge {
+		t.Fatalf("status = %d, want 413", rec.Code)
+	}
+}
+
+func TestRedactPath(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"/api/invites/link/SECRET-TOKEN", "/api/invites/link/[redacted]"},
+		{"/join/SECRET-TOKEN", "/join/[redacted]"},
+		{"/api/songs/5", "/api/songs/5"},
+		{"/", "/"},
+	}
+	for _, tt := range tests {
+		if got := redactPath(tt.in); got != tt.want {
+			t.Errorf("redactPath(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
 func TestMeRequiresAuth(t *testing.T) {
 	e := testServer(t)
 	rec := do(e, http.MethodGet, "/api/me", "", nil)

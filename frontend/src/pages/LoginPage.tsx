@@ -1,7 +1,9 @@
+import {AudioLines} from 'lucide-react';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
-import {Link, useNavigate} from 'react-router';
+import {Link, useNavigate, useSearchParams} from 'react-router';
 import {useAuthFeatures, useLogin} from '../hooks/auth';
+import {safeRedirect} from '../lib/redirect';
 
 export default function LoginPage() {
   const [login, setLogin] = useState('');
@@ -9,6 +11,10 @@ export default function LoginPage() {
   const [totpCode, setTotpCode] = useState('');
   const [totpRequired, setTotpRequired] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = safeRedirect(params.get('redirect'));
+  const redirectQuery =
+    redirect === '/' ? '' : `?redirect=${encodeURIComponent(redirect)}`;
   const loginMutation = useLogin();
   const {data: features} = useAuthFeatures();
 
@@ -17,7 +23,7 @@ export default function LoginPage() {
     loginMutation.mutate(
       {login, password, ...(totpCode ? {totpCode} : {})},
       {
-        onSuccess: () => void navigate('/'),
+        onSuccess: () => void navigate(redirect),
         onError: err => {
           if ((err.body as {totpRequired?: boolean} | null)?.totpRequired) {
             setTotpRequired(true);
@@ -36,8 +42,21 @@ export default function LoginPage() {
   return (
     <main className="hero bg-base-200 min-h-screen">
       <div className="hero-content w-full max-w-sm flex-col">
-        <h1 className="text-4xl font-bold">BandWidth</h1>
-        <form className="card bg-base-100 w-full p-6 shadow" onSubmit={submit}>
+        <div className="flex flex-col items-center gap-3">
+          <span className="bg-primary text-primary-content grid size-14 place-items-center rounded-box shadow-lg">
+            <AudioLines className="size-8" strokeWidth={2.25} />
+          </span>
+          <h1 className="font-display text-4xl font-bold tracking-tight">
+            Band<span className="text-primary">Width</span>
+          </h1>
+          <p className="text-base-content/55 text-sm">
+            Practice tracking for musicians and bands
+          </p>
+        </div>
+        <form
+          className="card bg-base-100 border-base-300/60 w-full border p-6 shadow-xl"
+          onSubmit={submit}
+        >
           <fieldset className="fieldset">
             <label className="label" htmlFor="login">
               Username or email
@@ -91,7 +110,7 @@ export default function LoginPage() {
         </form>
         <p className="text-sm">
           No account?{' '}
-          <Link className="link" to="/signup">
+          <Link className="link" to={`/signup${redirectQuery}`}>
             Sign up
           </Link>
           {features?.passwordReset && (

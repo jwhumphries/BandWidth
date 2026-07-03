@@ -67,6 +67,19 @@ func TestFolderLifecycle(t *testing.T) {
 		t.Error("folder reorder not applied")
 	}
 
+	// A reorder must name every folder exactly once; partial or duplicated
+	// lists would leave stale or colliding positions behind.
+	if err := repo.ReorderFolders(user.ID, []uint{f1.ID}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Errorf("partial reorder = %v, want ErrRecordNotFound", err)
+	}
+	if err := repo.ReorderFolders(user.ID, []uint{f1.ID, f1.ID}); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Errorf("duplicated reorder = %v, want ErrRecordNotFound", err)
+	}
+	folders, _ = repo.FoldersForUser(user.ID)
+	if folders[0].ID != f2.ID {
+		t.Error("rejected reorders must not change positions")
+	}
+
 	// Deleting a folder removes entries but never songs.
 	if err := repo.DeleteFolder(f1.ID, user.ID); err != nil {
 		t.Fatalf("DeleteFolder: %v", err)

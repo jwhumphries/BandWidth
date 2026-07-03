@@ -188,6 +188,25 @@ func (r *Repo) DeclineInvite(inviteID, userID uint) error {
 	return nil
 }
 
+// BandNameByLinkToken resolves a pending invite token to its band name
+// without joining. Mirrors JoinByLink's lookup: any pending, non-expired,
+// non-revoked invite resolves; anything else is not found.
+func (r *Repo) BandNameByLinkToken(token string) (string, error) {
+	hash := auth.HashToken(token)
+	var names []string
+	err := pendingInviteScope(r.db.Table("band_invites")).
+		Joins("JOIN bands ON bands.id = band_invites.band_id").
+		Where("band_invites.token_hash = ?", hash).
+		Pluck("bands.name", &names).Error
+	if err != nil {
+		return "", err
+	}
+	if len(names) == 0 {
+		return "", gorm.ErrRecordNotFound
+	}
+	return names[0], nil
+}
+
 // JoinByLink adds the user to the link's band (multi-use, idempotent).
 func (r *Repo) JoinByLink(token string, userID uint) (uint, error) {
 	hash := auth.HashToken(token)

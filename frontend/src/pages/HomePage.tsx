@@ -1,8 +1,10 @@
 import Fuse from 'fuse.js';
+import {Music, Plus, Search} from 'lucide-react';
 import {useEffect, useMemo, useState} from 'react';
 import FolderSidebar from '../components/folders/FolderSidebar';
 import SortableSongList from '../components/folders/SortableSongList';
 import AddSongModal from '../components/songs/AddSongModal';
+import LibraryProgress from '../components/songs/LibraryProgress';
 import SongRow from '../components/songs/SongRow';
 import {useFolders, useSetFolderEntries} from '../hooks/folders';
 import {useLogPractice, useSongs, useUndoPractice} from '../hooks/songs';
@@ -70,28 +72,63 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row">
+    <div className="flex flex-col gap-6 sm:flex-row">
       <FolderSidebar selectedId={folderId} onSelect={setFolderId} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h1 className="font-display text-2xl font-bold tracking-tight">
+              {selectedFolder ? selectedFolder.name : 'Library'}
+            </h1>
+            <p className="text-base-content/55 text-sm">
+              {folderSongs.length} {folderSongs.length === 1 ? 'song' : 'songs'}
+            </p>
+          </div>
+        </div>
+
+        <LibraryProgress songs={folderSongs} />
+
         <div className="flex items-center gap-3">
-          <input
-            className="input flex-1"
-            placeholder="Search songs…"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <button className="btn btn-primary" onClick={() => setAdding(true)}>
+          <label className="input flex-1">
+            <Search className="text-base-content/40 size-4" />
+            <input
+              placeholder="Search songs…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </label>
+          <button
+            className="btn btn-primary gap-1.5"
+            onClick={() => setAdding(true)}
+          >
+            <Plus className="size-4" />
             Add song
           </button>
         </div>
 
         {visible.length === 0 ? (
-          <p className="text-base-content/60 py-12 text-center">
-            {songs.length === 0
-              ? 'No songs yet — add your first one.'
-              : 'No songs here.'}
-          </p>
+          <div className="border-base-300/60 text-base-content/60 flex flex-col items-center gap-3 rounded-box border border-dashed py-16 text-center">
+            <Music className="text-base-content/30 size-10" />
+            {songs.length === 0 ? (
+              <>
+                <p className="text-base-content/80 font-medium">
+                  Your library is empty
+                </p>
+                <button
+                  className="btn btn-primary btn-sm gap-1.5"
+                  onClick={() => setAdding(true)}
+                >
+                  <Plus className="size-4" />
+                  Add your first song
+                </button>
+              </>
+            ) : searching ? (
+              <p>No songs match “{search.trim()}”.</p>
+            ) : (
+              <p>No songs in this folder yet.</p>
+            )}
+          </div>
         ) : selectedFolder && !searching ? (
           <SortableSongList
             songs={visible}
@@ -112,7 +149,7 @@ export default function HomePage() {
 
         {undo && (
           <div className="toast toast-center">
-            <div className="alert alert-success">
+            <div role="status" className="alert alert-success">
               <span>Practiced &quot;{undo.title}&quot;</span>
               <button
                 className="btn btn-ghost btn-sm"

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -66,6 +67,27 @@ func runServer() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	// Expired sessions, reset tokens, and dead invites accumulate otherwise;
+	// purge at startup and daily while the (always-on) machine runs.
+	purge := func() {
+		if err := repo.PurgeExpired(); err != nil {
+			logger.Warn("purging expired rows", "error", err)
+		}
+	}
+	purge()
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				purge()
+			}
+		}
+	}()
+
 	errCh := make(chan error, 1)
 	go func() {
 		logger.Info("starting server", "addr", srv.Addr, "version", version.Version)
@@ -86,6 +108,10 @@ func runServer() error {
 	return srv.Shutdown(shutdownCtx)
 }
 
+// maxBodyBytes caps request bodies well above the largest legitimate
+// payload (10k-char notes) so oversized JSON can't exhaust memory.
+const maxBodyBytes = 64 * 1024
+
 func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	e := echo.New()
 	// fly.io's edge proxy appends the real client IP to X-Forwarded-For;
@@ -93,6 +119,17 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 	e.Use(middleware.Recover())
 	e.Use(requestLogger(logger))
+	e.Use(middleware.BodyLimit(maxBodyBytes))
+	secureCfg := middleware.DefaultSecureConfig
+	if api.SecureCookies {
+		// Only advertise HSTS when actually serving behind TLS.
+		secureCfg.HSTSMaxAge = int((365 * 24 * time.Hour).Seconds())
+	}
+	secureMW, err := secureCfg.ToMiddleware()
+	if err != nil {
+		return nil, err
+	}
+	e.Use(secureMW)
 
 	e.GET("/healthz", handlers.Healthz)
 
@@ -184,6 +221,15 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	invites.POST("/:id/decline", api.DeclineInvite)
 	invites.POST("/link", api.JoinByLink)
 
+	// Public: name the band behind an invite token so /join can show it
+	// before the visitor authenticates. Gets its own per-IP budget so the
+	// pre-auth /join preview doesn't burn the signup/login/reset allowance
+	// on a shared IP.
+	previewLimiter := middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(
+		middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 5, ExpiresIn: 3 * time.Minute},
+	))
+	apiGroup.GET("/invites/link/:token", api.PreviewInviteLink, previewLimiter)
+
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
 		return nil, err
@@ -200,6 +246,17 @@ func newLogger(level string) *slog.Logger {
 	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: l}))
 }
 
+// redactPath hides secrets that travel in URL paths (invite tokens are
+// stored only as hashes; logging the raw path would defeat that).
+func redactPath(path string) string {
+	for _, prefix := range []string{"/api/invites/link/", "/join/"} {
+		if strings.HasPrefix(path, prefix) {
+			return prefix + "[redacted]"
+		}
+	}
+	return path
+}
+
 func requestLogger(logger *slog.Logger) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
@@ -207,7 +264,7 @@ func requestLogger(logger *slog.Logger) echo.MiddlewareFunc {
 			// req.URL.Path to "/" on fallback.
 			req := c.Request()
 			method := req.Method
-			path := req.URL.Path
+			path := redactPath(req.URL.Path)
 			start := time.Now()
 			err := next(c)
 			_, status := echo.ResolveResponseStatus(c.Response(), err)

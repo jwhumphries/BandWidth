@@ -60,7 +60,9 @@ func (m *smtpMailer) Send(to, subject, body string) error {
 
 	opts := []gomail.Option{
 		gomail.WithPort(m.cfg.Port),
-		gomail.WithTLSPortPolicy(gomail.TLSOpportunistic),
+		// Mandatory TLS: failing to send beats sending credentials in the
+		// clear if STARTTLS is unavailable (or stripped by a middlebox).
+		gomail.WithTLSPortPolicy(gomail.TLSMandatory),
 	}
 	if m.cfg.User != "" {
 		opts = append(opts,

@@ -1,6 +1,3 @@
-# fly.toml — BandWidth (single always-on machine; SQLite on a Fly volume)
-# See https://fly.io/docs/reference/configuration/
-
 app = "bandwidth"
 primary_region = "ord"
 
@@ -12,8 +9,7 @@ primary_region = "ord"
   BANDWIDTH_DB_PATH = "/data/bandwidth.db"
   BANDWIDTH_SECURE_COOKIES = "true"
   BANDWIDTH_LOG_LEVEL = "info"
-  # BANDWIDTH_BASE_URL is set per-app below; update it to the real hostname.
-  BANDWIDTH_BASE_URL = "https://bandwidth.fly.dev"
+  BANDWIDTH_BASE_URL = "https://bandwidth.jwhlabs.dev"
 
 [[mounts]]
   source = "bandwidth_data"
@@ -22,7 +18,6 @@ primary_region = "ord"
 [http_service]
   internal_port = 8080
   force_https = true
-  # SQLite is single-writer on one volume: exactly one always-on machine.
   auto_stop_machines = false
   auto_start_machines = false
   min_machines_running = 1

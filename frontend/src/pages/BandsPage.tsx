@@ -1,3 +1,4 @@
+import {ChevronRight, Plus, Users} from 'lucide-react';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link} from 'react-router';
@@ -23,11 +24,11 @@ export default function BandsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold">Bands</h1>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+      <h1 className="font-display text-3xl font-bold tracking-tight">Bands</h1>
 
       {invites.length > 0 && (
-        <section className="card bg-base-100 shadow">
+        <section className="card bg-base-100 border-primary/30 border shadow-sm">
           <div className="card-body">
             <h2 className="card-title">Invitations</h2>
             <ul className="flex flex-col gap-2">
@@ -62,24 +63,32 @@ export default function BandsPage() {
       )}
 
       {bands.length === 0 ? (
-        <p className="text-base-content/60 py-6 text-center">
-          No bands yet — create one or ask for an invite.
-        </p>
+        <div className="border-base-300/60 text-base-content/60 flex flex-col items-center gap-3 rounded-box border border-dashed py-16 text-center">
+          <Users className="text-base-content/30 size-10" />
+          <p>No bands yet — create one or ask for an invite.</p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-2">
           {bands.map(band => (
             <li key={band.id}>
               <Link
                 to={`/bands/${band.id}`}
-                className="bg-base-100 flex items-center gap-3 rounded-box p-4 shadow-sm"
+                className="group border-base-300/60 bg-base-100 hover:border-base-300 flex items-center gap-3 rounded-box border p-4 transition-all hover:shadow-md"
               >
-                <span className="min-w-0 flex-1 truncate font-semibold">
+                <span className="bg-base-300/60 text-base-content/70 grid size-9 shrink-0 place-items-center rounded-field">
+                  <Users className="size-4" />
+                </span>
+                <span className="group-hover:text-primary min-w-0 flex-1 truncate font-display font-semibold transition-colors">
                   {band.name}
                 </span>
-                <span className="badge badge-ghost">{band.role}</span>
-                <span className="text-base-content/60 text-sm">
-                  {band.memberCount} members
+                <span className="badge badge-ghost badge-sm capitalize">
+                  {band.role}
                 </span>
+                <span className="text-base-content/55 font-mono text-xs">
+                  {band.memberCount}{' '}
+                  {band.memberCount === 1 ? 'member' : 'members'}
+                </span>
+                <ChevronRight className="text-base-content/30 group-hover:text-base-content/60 size-4 transition-colors" />
               </Link>
             </li>
           ))}
@@ -93,7 +102,11 @@ export default function BandsPage() {
           value={name}
           onChange={e => setName(e.target.value)}
         />
-        <button className="btn btn-primary" disabled={createBand.isPending}>
+        <button
+          className="btn btn-primary gap-1.5"
+          disabled={createBand.isPending}
+        >
+          <Plus className="size-4" />
           Create
         </button>
       </form>

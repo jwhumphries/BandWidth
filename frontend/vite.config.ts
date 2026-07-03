@@ -21,8 +21,8 @@ export default defineConfig({
         name: 'BandWidth',
         short_name: 'BandWidth',
         description: 'Practice tracking for musicians and bands',
-        theme_color: '#1d4ed8',
-        background_color: '#ffffff',
+        theme_color: '#0e1116',
+        background_color: '#0e1116',
         display: 'standalone',
         start_url: '/',
         icons: [],
@@ -45,6 +45,9 @@ export default defineConfig({
     }),
   ],
   server: {
+    // Listen on 0.0.0.0 so the published port is reachable from the host
+    // when running inside the dev container.
+    host: true,
     port: 3000,
     proxy: {
       '/api': 'http://localhost:8080',

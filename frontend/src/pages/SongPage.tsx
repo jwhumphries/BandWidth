@@ -1,3 +1,4 @@
+import {ArrowLeft, FolderTree, Link2, Repeat, Trash2} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
@@ -72,15 +73,26 @@ export default function SongPage() {
 
   const save = (e: FormEvent) => {
     e.preventDefault();
-    updateSong.mutate(
-      {title, artist, notes},
-      {onSuccess: () => setDirty(false)},
-    );
+    // A band song's title/artist are band-owned; sending them (even
+    // unchanged) makes the server reject the whole update with 403.
+    updateSong.mutate(isBandSong ? {notes} : {title, artist, notes}, {
+      onSuccess: () => setDirty(false),
+    });
   };
 
   return (
-    <div className="flex flex-col gap-6">
-      <form className="card bg-base-100 shadow" onSubmit={save}>
+    <div className="mx-auto flex max-w-3xl flex-col gap-6">
+      <Link
+        to="/"
+        className="text-base-content/60 hover:text-base-content inline-flex w-fit items-center gap-1.5 text-sm font-medium transition-colors"
+      >
+        <ArrowLeft className="size-4" />
+        Library
+      </Link>
+      <form
+        className="card bg-base-100 border-base-300/60 border shadow-sm"
+        onSubmit={save}
+      >
         <div className="card-body">
           <label className="label" htmlFor="title">
             Title
@@ -153,10 +165,13 @@ export default function SongPage() {
 
       {song.band && <BandSection band={song.band} />}
 
-      <section className="card bg-base-100 shadow">
+      <section className="card bg-base-100 border-base-300/60 border shadow-sm">
         <div className="card-body">
-          <h2 className="card-title">Practice</h2>
-          <p>
+          <h2 className="card-title">
+            <Repeat className="text-primary size-5" />
+            Practice
+          </h2>
+          <p className="text-base-content/70 font-mono text-sm">
             {song.practiceCount} days practiced
             {song.lastPracticedAt && <> · last on {song.lastPracticedAt}</>}
           </p>
@@ -195,29 +210,38 @@ export default function SongPage() {
         </div>
       </section>
 
-      <section className="card bg-base-100 shadow">
+      <section className="card bg-base-100 border-base-300/60 border shadow-sm">
         <div className="card-body">
-          <h2 className="card-title">Links</h2>
+          <h2 className="card-title">
+            <Link2 className="text-primary size-5" />
+            Links
+          </h2>
           <ResourceList songId={id} resources={song.resources} />
         </div>
       </section>
 
-      <section className="card bg-base-100 shadow">
+      <section className="card bg-base-100 border-base-300/60 border shadow-sm">
         <div className="card-body">
-          <h2 className="card-title">Folders</h2>
+          <h2 className="card-title">
+            <FolderTree className="text-primary size-5" />
+            Folders
+          </h2>
           <FolderPicker songId={id} />
         </div>
       </section>
 
       {!isBandSong && (
-        <section className="card bg-base-100 shadow">
+        <section className="border-error/30 bg-error/5 rounded-box border">
           <div className="card-body">
-            <h2 className="card-title">Danger zone</h2>
+            <h2 className="text-error/90 text-sm font-semibold tracking-wide uppercase">
+              Danger zone
+            </h2>
             <div className="card-actions">
               <button
-                className="btn btn-error btn-outline"
+                className="btn btn-error btn-outline gap-1.5"
                 onClick={() => setConfirming(true)}
               >
+                <Trash2 className="size-4" />
                 Delete song
               </button>
             </div>

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
@@ -83,6 +85,38 @@ func TestAcceptGuards(t *testing.T) {
 		Update("expires_at", time.Now().Add(-time.Minute))
 	if _, err := repo.AcceptInvite(invite2.ID, bob.ID); err == nil {
 		t.Error("expired invite accepted")
+	}
+}
+
+func TestBandNameByLinkToken(t *testing.T) {
+	repo, alice, _, band := inviteFixture(t)
+
+	_, token, err := repo.CreateLinkInvite(band.ID, model.RoleViewer, alice.ID)
+	if err != nil {
+		t.Fatalf("CreateLinkInvite: %v", err)
+	}
+
+	// Valid token resolves to the band name.
+	name, err := repo.BandNameByLinkToken(token)
+	if err != nil || name != "Band" {
+		t.Fatalf("BandNameByLinkToken = %q, %v; want \"Band\"", name, err)
+	}
+
+	// Bogus token is not found.
+	if _, err := repo.BandNameByLinkToken("bogus"); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Errorf("bogus token err = %v; want ErrRecordNotFound", err)
+	}
+
+	// Revoked link stops resolving.
+	invites, err := repo.InvitesForBand(band.ID)
+	if err != nil || len(invites) != 1 {
+		t.Fatalf("InvitesForBand: %v (%v)", invites, err)
+	}
+	if err := repo.RevokeInvite(invites[0].ID, band.ID); err != nil {
+		t.Fatalf("RevokeInvite: %v", err)
+	}
+	if _, err := repo.BandNameByLinkToken(token); !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Errorf("revoked token err = %v; want ErrRecordNotFound", err)
 	}
 }
 

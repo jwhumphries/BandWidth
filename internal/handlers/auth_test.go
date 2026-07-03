@@ -92,6 +92,9 @@ func TestSignupValidation(t *testing.T) {
 		{name: "bad email", body: `{"username":"a","email":"nope","password":"hunter2hunter2"}`, want: 400},
 		{name: "bare at-sign email", body: `{"username":"a","email":"@","password":"hunter2hunter2"}`, want: 400},
 		{name: "missing domain email", body: `{"username":"a","email":"user@","password":"hunter2hunter2"}`, want: 400},
+		{name: "email-shaped username", body: `{"username":"who@else.com","email":"a@b.c","password":"hunter2hunter2"}`, want: 400},
+		{name: "oversized username", body: `{"username":"` + strings.Repeat("u", 101) + `","email":"a@b.c","password":"hunter2hunter2"}`, want: 400},
+		{name: "oversized email", body: `{"username":"a","email":"` + strings.Repeat("e", 251) + `@b.c","password":"hunter2hunter2"}`, want: 400},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

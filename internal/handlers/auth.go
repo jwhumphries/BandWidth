@@ -11,11 +11,34 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/repository"
 )
 
+// Length caps for identity fields; the email cap is RFC 5321's address limit.
+const (
+	maxUsernameLen = 100
+	maxEmailLen    = 254
+)
+
 // validEmail reports whether s is a plain RFC 5322 address (no display name).
 func validEmail(s string) bool {
 	addr, err := netmail.ParseAddress(s)
-	return err == nil && addr.Address == s
+	return err == nil && addr.Address == s && len(s) <= maxEmailLen
 }
+
+// validUsername reports whether s works as a username. Usernames share the
+// login field with emails (UserByLogin matches either column), so an
+// embedded @ would make lookups ambiguous and is rejected.
+func validUsername(s string) bool {
+	return s != "" && len(s) <= maxUsernameLen && !strings.Contains(s, "@")
+}
+
+// dummyPasswordHash is compared when login names no account, so response
+// timing does not reveal whether a username or email exists.
+var dummyPasswordHash = func() string {
+	hash, err := auth.HashPassword(auth.NewToken())
+	if err != nil {
+		panic(err)
+	}
+	return hash
+}()
 
 type signupRequest struct {
 	Username string `json:"username"`
@@ -31,9 +54,13 @@ func (a *API) Signup(c *echo.Context) error {
 	}
 	req.Username = strings.TrimSpace(req.Username)
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
-	if req.Username == "" || len(req.Password) < 8 {
+	if !validUsername(req.Username) {
 		return echo.NewHTTPError(http.StatusBadRequest,
-			"username and a password of at least 8 characters are required")
+			"a username of at most 100 characters (without @) is required")
+	}
+	if len(req.Password) < 8 {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			"a password of at least 8 characters is required")
 	}
 	if !validEmail(req.Email) {
 		return echo.NewHTTPError(http.StatusBadRequest, "a valid email address is required")
@@ -73,7 +100,13 @@ func (a *API) Login(c *echo.Context) error {
 	}
 
 	user, err := a.Repo.UserByLogin(strings.TrimSpace(req.Login))
-	if err != nil || !auth.VerifyPassword(req.Password, user.PasswordHash) {
+	if err != nil {
+		// Burn a comparable hash verification so unknown accounts are not
+		// distinguishable from wrong passwords by timing.
+		auth.VerifyPassword(req.Password, dummyPasswordHash)
+		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
+	}
+	if !auth.VerifyPassword(req.Password, user.PasswordHash) {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
