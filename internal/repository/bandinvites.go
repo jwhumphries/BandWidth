@@ -39,9 +39,13 @@ type BandInviteInfo struct {
 	ExpiresAt       time.Time      `json:"expiresAt"`
 }
 
+// pendingInviteCond is shared with PurgeExpired, which deletes everything
+// this condition excludes (see maintenance.go).
+const pendingInviteCond = "accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ?"
+
 // pendingInviteScope filters to usable invites.
 func pendingInviteScope(db *gorm.DB) *gorm.DB {
-	return db.Where("accepted_at IS NULL AND revoked_at IS NULL AND expires_at > ?", time.Now())
+	return db.Where(pendingInviteCond, time.Now())
 }
 
 // CreateDirectInvite invites an existing user to a band.

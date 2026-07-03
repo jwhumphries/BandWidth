@@ -7,19 +7,21 @@ import type {Folder} from '../../lib/types';
 
 export default function SortableFolderRow({
   folder,
+  canEdit = true,
   selected,
   onSelect,
   onRename,
   onDelete,
 }: {
   folder: Folder;
+  canEdit?: boolean;
   selected: boolean;
   onSelect: () => void;
   onRename: (name: string) => void;
   onDelete: () => void;
 }) {
   const {attributes, listeners, setNodeRef, transform, transition} =
-    useSortable({id: folder.id});
+    useSortable({id: folder.id, disabled: !canEdit});
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(folder.name);
   const submitted = useRef(false);
@@ -44,14 +46,16 @@ export default function SortableFolderRow({
         selected ? 'bg-base-300' : 'hover:bg-base-300/50'
       }`}
     >
-      <button
-        className="text-base-content/30 hover:text-base-content/70 cursor-grab touch-none px-0.5"
-        aria-label={`Reorder ${folder.name}`}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="size-4" />
-      </button>
+      {canEdit && (
+        <button
+          className="text-base-content/30 hover:text-base-content/70 cursor-grab touch-none px-0.5"
+          aria-label={`Reorder ${folder.name}`}
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4" />
+        </button>
+      )}
       {editing ? (
         <form onSubmit={submitRename} className="flex-1">
           <input
@@ -72,24 +76,28 @@ export default function SortableFolderRow({
           {folder.name}
         </button>
       )}
-      <button
-        className="btn btn-ghost btn-xs btn-square opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-        aria-label={`Rename ${folder.name}`}
-        onClick={() => {
-          submitted.current = false;
-          setName(folder.name);
-          setEditing(true);
-        }}
-      >
-        <Pencil className="size-3.5" />
-      </button>
-      <button
-        className="btn btn-ghost btn-xs btn-square hover:text-error opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-        aria-label={`Delete ${folder.name}`}
-        onClick={onDelete}
-      >
-        <X className="size-3.5" />
-      </button>
+      {canEdit && (
+        <>
+          <button
+            className="btn btn-ghost btn-xs btn-square opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+            aria-label={`Rename ${folder.name}`}
+            onClick={() => {
+              submitted.current = false;
+              setName(folder.name);
+              setEditing(true);
+            }}
+          >
+            <Pencil className="size-3.5" />
+          </button>
+          <button
+            className="btn btn-ghost btn-xs btn-square hover:text-error opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+            aria-label={`Delete ${folder.name}`}
+            onClick={onDelete}
+          >
+            <X className="size-3.5" />
+          </button>
+        </>
+      )}
     </li>
   );
 }

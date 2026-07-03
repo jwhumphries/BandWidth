@@ -4,7 +4,7 @@ import {SortableContext, verticalListSortingStrategy} from '@dnd-kit/sortable';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
 import ConfirmModal from '../songs/ConfirmModal';
-import BandFolderRow from './BandFolderRow';
+import SortableFolderRow from '../folders/SortableFolderRow';
 import {
   useBandFolders,
   useCreateBandFolder,
@@ -72,7 +72,7 @@ export default function BandFolderSidebar({
         >
           <ul className="mt-2 flex flex-col gap-1">
             {folders.map(f => (
-              <BandFolderRow
+              <SortableFolderRow
                 key={f.id}
                 folder={f}
                 canEdit={canEdit}

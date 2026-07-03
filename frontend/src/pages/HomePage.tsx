@@ -140,7 +140,12 @@ export default function HomePage() {
         ) : (
           <ul className="flex flex-col gap-2">
             {visible.map(song => (
-              <SongRow key={song.id} song={song} onPracticed={practiced} />
+              <SongRow
+                key={song.id}
+                song={song}
+                linkTo={`/songs/${song.id}`}
+                onPracticed={practiced}
+              />
             ))}
           </ul>
         )}

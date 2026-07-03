@@ -1,6 +1,6 @@
 import {Plus} from 'lucide-react';
 import {useEffect, useState} from 'react';
-import BandSongRow from './BandSongRow';
+import SongRow from '../songs/SongRow';
 import AddBandSongModal from './AddBandSongModal';
 import {
   useBandSongs,
@@ -90,12 +90,13 @@ export default function BandSongList({
       ) : (
         <ul className="flex flex-col gap-2">
           {visible.map(song => (
-            <BandSongRow
+            <SongRow
               key={song.id}
-              bandId={bandId}
               song={song}
+              linkTo={`/bands/${bandId}/songs/${song.id}`}
               canEdit={canEdit}
-              onRehearsed={rehearsed}
+              actionLabel="Rehearsed"
+              onPracticed={rehearsed}
             />
           ))}
         </ul>

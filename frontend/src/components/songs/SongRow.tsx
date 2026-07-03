@@ -6,14 +6,20 @@ import StatusBadge from './StatusBadge';
 
 export default function SongRow({
   song,
+  linkTo,
   onPracticed,
+  canEdit = true,
+  actionLabel = 'Practiced',
 }: {
   song: SongListItem;
+  linkTo: string;
   onPracticed: (id: number, date: string) => void;
+  canEdit?: boolean;
+  actionLabel?: string;
 }) {
   return (
     <li className="group border-base-300/60 bg-base-100 hover:border-base-300 flex items-center gap-3 rounded-box border p-3 transition-all hover:shadow-md sm:gap-4 sm:p-4">
-      <Link to={`/songs/${song.id}`} className="min-w-0 flex-1">
+      <Link to={linkTo} className="min-w-0 flex-1">
         <span className="font-display group-hover:text-primary block truncate text-base font-semibold transition-colors">
           {song.title}
         </span>
@@ -34,13 +40,16 @@ export default function SongRow({
           <Clock className="size-3 shrink-0" />
           {song.lastPracticedAt || 'never'}
         </span>
-        <button
-          className="btn btn-primary btn-sm gap-1.5"
-          onClick={() => onPracticed(song.id, localToday())}
-        >
-          <CircleCheck className="size-4" />
-          Practiced
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            className="btn btn-primary btn-sm gap-1.5"
+            onClick={() => onPracticed(song.id, localToday())}
+          >
+            <CircleCheck className="size-4" />
+            {actionLabel}
+          </button>
+        )}
       </div>
     </li>
   );

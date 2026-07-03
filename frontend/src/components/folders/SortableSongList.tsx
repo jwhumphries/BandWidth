@@ -35,7 +35,11 @@ function SortableSongRow({
       </button>
       <div className="min-w-0 flex-1">
         <ul>
-          <SongRow song={song} onPracticed={onPracticed} />
+          <SongRow
+            song={song}
+            linkTo={`/songs/${song.id}`}
+            onPracticed={onPracticed}
+          />
         </ul>
       </div>
     </div>
