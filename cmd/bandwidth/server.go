@@ -52,6 +52,7 @@ func runServer() error {
 		Logger:        logger,
 		BaseURL:       viper.GetString("base_url"),
 		SecureCookies: viper.GetBool("secure_cookies"),
+		AdminEmails:   parseAdminEmails(viper.GetString("admin_emails")),
 	}
 
 	e, err := newEcho(logger, api)
@@ -252,6 +253,19 @@ func newLogger(level string) *slog.Logger {
 // PreviewInviteLink's registration and App.tsx's /join/:token route) so a
 // new token-bearing route is harder to add without also marking it here.
 var sensitivePathPrefixes = []string{"/api/invites/link/", "/join/"}
+
+// parseAdminEmails splits a comma-separated BANDWIDTH_ADMIN_EMAILS value into
+// a lowercase, trimmed lookup set.
+func parseAdminEmails(raw string) map[string]bool {
+	emails := map[string]bool{}
+	for _, e := range strings.Split(raw, ",") {
+		e = strings.ToLower(strings.TrimSpace(e))
+		if e != "" {
+			emails[e] = true
+		}
+	}
+	return emails
+}
 
 // redactPath hides secrets that travel in URL paths (invite tokens are
 // stored only as hashes; logging the raw path would defeat that).

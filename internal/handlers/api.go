@@ -3,6 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v5"
 
@@ -19,6 +20,12 @@ type API struct {
 	Logger        *slog.Logger
 	BaseURL       string
 	SecureCookies bool
+	AdminEmails   map[string]bool
+}
+
+// IsAdminEmail reports whether email belongs to a configured site admin.
+func (a *API) IsAdminEmail(email string) bool {
+	return a.AdminEmails[strings.ToLower(strings.TrimSpace(email))]
 }
 
 // logger returns the configured logger, or the process default.
