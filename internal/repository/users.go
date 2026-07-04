@@ -3,6 +3,8 @@ package repository
 import (
 	"strings"
 
+	"gorm.io/gorm"
+
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
@@ -46,4 +48,66 @@ func (r *Repo) UserByID(id uint) (*model.User, error) {
 // SaveUser persists changes to an existing user.
 func (r *Repo) SaveUser(user *model.User) error {
 	return r.db.Save(user).Error
+}
+
+// DeleteUser removes a user and everything they solely own: sessions, 2FA
+// backup codes, pending password resets, personal (non-band) songs/folders,
+// band memberships, pending invites addressed to them, and any band they
+// created (cascaded, same as DeleteBand). Their personal layer (annotation/
+// resource/practice rows) on any other band song is also cleared, since
+// there is no longer a user to own a converted copy. Atomic.
+func (r *Repo) DeleteUser(userID uint) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var createdBands []model.Band
+		if err := tx.Where("creator_id = ?", userID).Find(&createdBands).Error; err != nil {
+			return err
+		}
+		for _, b := range createdBands {
+			if err := deleteBandTx(tx, b.ID); err != nil {
+				return err
+			}
+		}
+		for _, m := range []any{&model.SongAnnotation{}, &model.Resource{}, &model.PracticeEvent{}} {
+			if err := tx.Where("user_id = ?", userID).Delete(m).Error; err != nil {
+				return err
+			}
+		}
+		var personalSongs []model.Song
+		if err := tx.Where("owner_user_id = ?", userID).Find(&personalSongs).Error; err != nil {
+			return err
+		}
+		for _, s := range personalSongs {
+			if err := deleteSongRowsTx(tx, s.ID); err != nil {
+				return err
+			}
+		}
+		var folders []model.Folder
+		if err := tx.Where("owner_user_id = ?", userID).Find(&folders).Error; err != nil {
+			return err
+		}
+		for _, f := range folders {
+			if err := tx.Where("folder_id = ?", f.ID).Delete(&model.FolderEntry{}).Error; err != nil {
+				return err
+			}
+		}
+		if err := tx.Where("owner_user_id = ?", userID).Delete(&model.Folder{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&model.BandMember{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("invited_user_id = ?", userID).Delete(&model.BandInvite{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&model.Session{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&model.BackupCode{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&model.PasswordReset{}).Error; err != nil {
+			return err
+		}
+		return tx.Delete(&model.User{}, userID).Error
+	})
 }
