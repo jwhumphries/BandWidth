@@ -98,7 +98,7 @@ func (a *API) Signup(c *echo.Context) error {
 		return err
 	}
 	a.setSessionCookie(c, token)
-	return c.JSON(http.StatusCreated, userResponse(user))
+	return c.JSON(http.StatusCreated, a.userResponse(user))
 }
 
 type loginRequest struct {
@@ -144,7 +144,7 @@ func (a *API) Login(c *echo.Context) error {
 		return err
 	}
 	a.setSessionCookie(c, token)
-	return c.JSON(http.StatusOK, userResponse(user))
+	return c.JSON(http.StatusOK, a.userResponse(user))
 }
 
 // Logout deletes the session and clears the cookie.

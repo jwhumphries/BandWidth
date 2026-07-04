@@ -36,12 +36,13 @@ func (a *API) logger() *slog.Logger {
 	return slog.Default()
 }
 
-func userResponse(u *model.User) map[string]any {
+func (a *API) userResponse(u *model.User) map[string]any {
 	return map[string]any{
 		"id":          u.ID,
 		"username":    u.Username,
 		"email":       u.Email,
 		"totpEnabled": u.TOTPEnabled(),
+		"isAdmin":     a.IsAdminEmail(u.Email),
 	}
 }
 

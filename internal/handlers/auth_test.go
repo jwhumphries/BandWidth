@@ -249,3 +249,24 @@ func TestSignupAccessPolicyAllowsAdminEmail(t *testing.T) {
 		t.Fatalf("admin signup: %d %s", rec.Code, rec.Body.String())
 	}
 }
+
+func TestMeIncludesIsAdmin(t *testing.T) {
+	e, api := newTestAPI(t)
+	api.AdminEmails = map[string]bool{"alice@example.com": true}
+	rec := postJSON(e, "/api/auth/signup",
+		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`)
+	cookie := sessionCookie(t, rec)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	req.AddCookie(cookie)
+	mrec := httptest.NewRecorder()
+	e.ServeHTTP(mrec, req)
+
+	var body map[string]any
+	if err := json.Unmarshal(mrec.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body["isAdmin"] != true {
+		t.Errorf("isAdmin = %v, want true", body["isAdmin"])
+	}
+}

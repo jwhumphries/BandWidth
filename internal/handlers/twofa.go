@@ -97,5 +97,5 @@ func (a *API) TwoFactorDisable(c *echo.Context) error {
 	if err := a.Repo.DeleteBackupCodes(user.ID); err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, userResponse(user))
+	return c.JSON(http.StatusOK, a.userResponse(user))
 }

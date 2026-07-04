@@ -17,7 +17,7 @@ func (a *API) Me(c *echo.Context) error {
 	if user == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
 	}
-	return c.JSON(http.StatusOK, userResponse(user))
+	return c.JSON(http.StatusOK, a.userResponse(user))
 }
 
 type updateMeRequest struct {
@@ -56,7 +56,7 @@ func (a *API) UpdateMe(c *echo.Context) error {
 		}
 		return err
 	}
-	return c.JSON(http.StatusOK, userResponse(user))
+	return c.JSON(http.StatusOK, a.userResponse(user))
 }
 
 type changePasswordRequest struct {
@@ -99,5 +99,5 @@ func (a *API) ChangePassword(c *echo.Context) error {
 		return err
 	}
 	a.setSessionCookie(c, token)
-	return c.JSON(http.StatusOK, userResponse(user))
+	return c.JSON(http.StatusOK, a.userResponse(user))
 }
