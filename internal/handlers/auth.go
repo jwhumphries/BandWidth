@@ -65,6 +65,21 @@ func (a *API) Signup(c *echo.Context) error {
 	if !validEmail(req.Email) {
 		return echo.NewHTTPError(http.StatusBadRequest, "a valid email address is required")
 	}
+	if !a.IsAdminEmail(req.Email) {
+		enabled, err := a.Repo.AccessPolicyEnabled()
+		if err != nil {
+			return err
+		}
+		if enabled {
+			allowed, err := a.Repo.EmailAllowed(req.Email)
+			if err != nil {
+				return err
+			}
+			if !allowed {
+				return echo.NewHTTPError(http.StatusForbidden, "registration is not open")
+			}
+		}
+	}
 
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
