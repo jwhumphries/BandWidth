@@ -30,6 +30,7 @@ func TestOpenMigratesSchema(t *testing.T) {
 		"songs", "song_annotations", "resources", "practice_events",
 		"folders", "folder_entries",
 		"bands", "band_members", "band_invites",
+		"access_policies", "allowed_emails",
 	} {
 		var n int64
 		if err := repo.db.Table(table).Count(&n).Error; err != nil {
