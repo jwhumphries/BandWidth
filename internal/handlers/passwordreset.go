@@ -24,17 +24,24 @@ func (a *API) RequestPasswordReset(c *echo.Context) error {
 	}
 
 	email := strings.ToLower(strings.TrimSpace(req.Email))
-	if user, err := a.Repo.UserByLogin(email); err == nil {
-		if token, err := a.Repo.CreatePasswordReset(user.ID); err == nil {
-			link := fmt.Sprintf("%s/reset-password?token=%s", a.BaseURL, token)
-			if err := a.Mailer.Send(user.Email, "Reset your BandWidth password",
-				"Someone (hopefully you) asked to reset your BandWidth password.\n\n"+
-					"Reset it within the next hour: "+link+"\n\n"+
-					"If this wasn't you, ignore this email."); err != nil {
-				// Response stays 204 (no account enumeration), but operators
-				// need to know the relay is broken.
-				a.logger().Warn("password reset email failed", "error", err)
-			}
+	user, err := a.Repo.UserByLogin(email)
+	if err != nil {
+		// Burn a comparable token-hash computation so an unknown email
+		// doesn't return faster than a known one. This doesn't hide the
+		// SMTP round-trip that only happens for real accounts — closing
+		// that gap would mean sending a real email on every request.
+		auth.HashToken(auth.NewToken())
+		return c.NoContent(http.StatusNoContent)
+	}
+	if token, err := a.Repo.CreatePasswordReset(user.ID); err == nil {
+		link := fmt.Sprintf("%s/reset-password?token=%s", a.BaseURL, token)
+		if err := a.Mailer.Send(user.Email, "Reset your BandWidth password",
+			"Someone (hopefully you) asked to reset your BandWidth password.\n\n"+
+				"Reset it within the next hour: "+link+"\n\n"+
+				"If this wasn't you, ignore this email."); err != nil {
+			// Response stays 204 (no account enumeration), but operators
+			// need to know the relay is broken.
+			a.logger().Warn("password reset email failed", "error", err)
 		}
 	}
 	return c.NoContent(http.StatusNoContent)

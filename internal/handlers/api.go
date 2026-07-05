@@ -3,6 +3,7 @@ package handlers
 import (
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v5"
 
@@ -19,6 +20,12 @@ type API struct {
 	Logger        *slog.Logger
 	BaseURL       string
 	SecureCookies bool
+	AdminEmails   map[string]bool
+}
+
+// IsAdminEmail reports whether email belongs to a configured site admin.
+func (a *API) IsAdminEmail(email string) bool {
+	return a.AdminEmails[strings.ToLower(strings.TrimSpace(email))]
 }
 
 // logger returns the configured logger, or the process default.
@@ -29,12 +36,13 @@ func (a *API) logger() *slog.Logger {
 	return slog.Default()
 }
 
-func userResponse(u *model.User) map[string]any {
+func (a *API) userResponse(u *model.User) map[string]any {
 	return map[string]any{
 		"id":          u.ID,
 		"username":    u.Username,
 		"email":       u.Email,
 		"totpEnabled": u.TOTPEnabled(),
+		"isAdmin":     a.IsAdminEmail(u.Email),
 	}
 }
 

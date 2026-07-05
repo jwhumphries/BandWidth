@@ -3,6 +3,7 @@ import type {ReactNode} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
 import {useMe} from '../hooks/auth';
 import {useJoinByLink, useLinkPreview} from '../hooks/invites';
+import {ApiError} from '../lib/api';
 
 export default function JoinPage() {
   const {token} = useParams();
@@ -33,10 +34,37 @@ export default function JoinPage() {
     );
   }
   if (preview.isError) {
+    if (preview.error instanceof ApiError && preview.error.status === 404) {
+      return card(
+        <p className="text-base-content/70">
+          This invite link is invalid or has expired.
+        </p>,
+      );
+    }
     return card(
-      <p className="text-base-content/70">
-        This invite link is invalid or has expired.
-      </p>,
+      <div className="flex flex-col gap-4">
+        <p className="text-base-content/70">Could not load this invite.</p>
+        <button
+          className="btn btn-primary"
+          onClick={() => void preview.refetch()}
+        >
+          Retry
+        </button>
+      </div>,
+    );
+  }
+  const loggedOut =
+    me.isError &&
+    me.error instanceof ApiError &&
+    (me.error.status === 401 || me.error.status === 403);
+  if (me.isError && !loggedOut) {
+    return card(
+      <div className="flex flex-col gap-4">
+        <p className="text-base-content/70">Could not reach the server.</p>
+        <button className="btn btn-primary" onClick={() => void me.refetch()}>
+          Retry
+        </button>
+      </div>,
     );
   }
 

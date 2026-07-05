@@ -19,9 +19,10 @@ func (r *Repo) PurgeExpired() error {
 		Delete(&model.PasswordReset{}).Error; err != nil {
 		return err
 	}
-	// accepted_at is only ever set on single-use direct invites; multi-use
-	// link invites stay live until they expire or are revoked.
-	return r.db.
-		Where("expires_at <= ? OR revoked_at IS NOT NULL OR accepted_at IS NOT NULL", now).
-		Delete(&model.BandInvite{}).Error
+	// Dead invites are everything pendingInviteScope wouldn't return: expired,
+	// revoked, or accepted (accepted_at is only ever set on single-use direct
+	// invites; multi-use link invites stay live until expired or revoked).
+	// Negating the shared condition keeps the two in sync if invite-liveness
+	// rules change.
+	return r.db.Not(pendingInviteCond, now).Delete(&model.BandInvite{}).Error
 }

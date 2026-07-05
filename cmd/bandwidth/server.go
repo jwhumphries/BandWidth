@@ -52,6 +52,7 @@ func runServer() error {
 		Logger:        logger,
 		BaseURL:       viper.GetString("base_url"),
 		SecureCookies: viper.GetBool("secure_cookies"),
+		AdminEmails:   parseAdminEmails(viper.GetString("admin_emails")),
 	}
 
 	e, err := newEcho(logger, api)
@@ -74,8 +75,8 @@ func runServer() error {
 			logger.Warn("purging expired rows", "error", err)
 		}
 	}
-	purge()
 	go func() {
+		purge()
 		ticker := time.NewTicker(24 * time.Hour)
 		defer ticker.Stop()
 		for {
@@ -224,11 +225,22 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	// Public: name the band behind an invite token so /join can show it
 	// before the visitor authenticates. Gets its own per-IP budget so the
 	// pre-auth /join preview doesn't burn the signup/login/reset allowance
-	// on a shared IP.
+	// on a shared IP. Carries a raw token in the path — see
+	// sensitivePathPrefixes, which must list this prefix too.
 	previewLimiter := middleware.RateLimiter(middleware.NewRateLimiterMemoryStoreWithConfig(
 		middleware.RateLimiterMemoryStoreConfig{Rate: 1, Burst: 5, ExpiresIn: 3 * time.Minute},
 	))
 	apiGroup.GET("/invites/link/:token", api.PreviewInviteLink, previewLimiter)
+
+	admin := apiGroup.Group("/admin", appmw.RequireAuth(api.Repo), appmw.RequireAdmin(api.IsAdminEmail))
+	admin.GET("/users", api.AdminUsers)
+	admin.DELETE("/users/:id", api.AdminDeleteUser)
+	admin.GET("/bands", api.AdminBands)
+	admin.DELETE("/bands/:id", api.AdminDeleteBand)
+	admin.GET("/access-policy", api.AdminGetAccessPolicy)
+	admin.PUT("/access-policy", api.AdminSetAccessPolicy)
+	admin.POST("/access-policy/emails", api.AdminAddAllowedEmail)
+	admin.DELETE("/access-policy/emails/:id", api.AdminRemoveAllowedEmail)
 
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
@@ -246,10 +258,29 @@ func newLogger(level string) *slog.Logger {
 	return slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: l}))
 }
 
+// sensitivePathPrefixes carries a raw secret (an invite token) in the URL
+// itself. Declared next to the routes that register them (see
+// PreviewInviteLink's registration and App.tsx's /join/:token route) so a
+// new token-bearing route is harder to add without also marking it here.
+var sensitivePathPrefixes = []string{"/api/invites/link/", "/join/"}
+
+// parseAdminEmails splits a comma-separated BANDWIDTH_ADMIN_EMAILS value into
+// a lowercase, trimmed lookup set.
+func parseAdminEmails(raw string) map[string]bool {
+	emails := map[string]bool{}
+	for _, e := range strings.Split(raw, ",") {
+		e = strings.ToLower(strings.TrimSpace(e))
+		if e != "" {
+			emails[e] = true
+		}
+	}
+	return emails
+}
+
 // redactPath hides secrets that travel in URL paths (invite tokens are
 // stored only as hashes; logging the raw path would defeat that).
 func redactPath(path string) string {
-	for _, prefix := range []string{"/api/invites/link/", "/join/"} {
+	for _, prefix := range sensitivePathPrefixes {
 		if strings.HasPrefix(path, prefix) {
 			return prefix + "[redacted]"
 		}

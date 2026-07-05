@@ -4,6 +4,7 @@ import (
 	"net/http"
 	netmail "net/mail"
 	"strings"
+	"sync"
 
 	"github.com/labstack/echo/v5"
 
@@ -31,14 +32,16 @@ func validUsername(s string) bool {
 }
 
 // dummyPasswordHash is compared when login names no account, so response
-// timing does not reveal whether a username or email exists.
-var dummyPasswordHash = func() string {
+// timing does not reveal whether a username or email exists. Computed
+// lazily: the argon2id hash is memory-hard and would otherwise slow every
+// process start.
+var dummyPasswordHash = sync.OnceValue(func() string {
 	hash, err := auth.HashPassword(auth.NewToken())
 	if err != nil {
 		panic(err)
 	}
 	return hash
-}()
+})
 
 type signupRequest struct {
 	Username string `json:"username"`
@@ -65,6 +68,21 @@ func (a *API) Signup(c *echo.Context) error {
 	if !validEmail(req.Email) {
 		return echo.NewHTTPError(http.StatusBadRequest, "a valid email address is required")
 	}
+	if !a.IsAdminEmail(req.Email) {
+		enabled, err := a.Repo.AccessPolicyEnabled()
+		if err != nil {
+			return err
+		}
+		if enabled {
+			allowed, err := a.Repo.EmailAllowed(req.Email)
+			if err != nil {
+				return err
+			}
+			if !allowed {
+				return echo.NewHTTPError(http.StatusForbidden, "registration is not open")
+			}
+		}
+	}
 
 	hash, err := auth.HashPassword(req.Password)
 	if err != nil {
@@ -83,7 +101,7 @@ func (a *API) Signup(c *echo.Context) error {
 		return err
 	}
 	a.setSessionCookie(c, token)
-	return c.JSON(http.StatusCreated, userResponse(user))
+	return c.JSON(http.StatusCreated, a.userResponse(user))
 }
 
 type loginRequest struct {
@@ -103,7 +121,7 @@ func (a *API) Login(c *echo.Context) error {
 	if err != nil {
 		// Burn a comparable hash verification so unknown accounts are not
 		// distinguishable from wrong passwords by timing.
-		auth.VerifyPassword(req.Password, dummyPasswordHash)
+		auth.VerifyPassword(req.Password, dummyPasswordHash())
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 	if !auth.VerifyPassword(req.Password, user.PasswordHash) {
@@ -129,7 +147,7 @@ func (a *API) Login(c *echo.Context) error {
 		return err
 	}
 	a.setSessionCookie(c, token)
-	return c.JSON(http.StatusOK, userResponse(user))
+	return c.JSON(http.StatusOK, a.userResponse(user))
 }
 
 // Logout deletes the session and clears the cookie.

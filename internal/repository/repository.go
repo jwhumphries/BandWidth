@@ -50,6 +50,8 @@ func Open(path string) (*Repo, error) {
 		&model.Band{},
 		&model.BandMember{},
 		&model.BandInvite{},
+		&model.AccessPolicy{},
+		&model.AllowedEmail{},
 	); err != nil {
 		if sqlDB, dbErr := db.DB(); dbErr == nil {
 			_ = sqlDB.Close()

@@ -154,6 +154,35 @@ func TestRedactPath(t *testing.T) {
 	}
 }
 
+func TestParseAdminEmails(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want map[string]bool
+	}{
+		{"empty", "", map[string]bool{}},
+		{"single", "admin@example.com", map[string]bool{"admin@example.com": true}},
+		{"commas", "a@example.com,b@example.com", map[string]bool{"a@example.com": true, "b@example.com": true}},
+		{"extra spaces", " a@example.com , b@example.com ", map[string]bool{"a@example.com": true, "b@example.com": true}},
+		{"mixed case", "Admin@Example.COM", map[string]bool{"admin@example.com": true}},
+		{"empty entries", "a@example.com,,  ,b@example.com", map[string]bool{"a@example.com": true, "b@example.com": true}},
+		{"duplicates", "a@example.com,A@Example.com", map[string]bool{"a@example.com": true}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseAdminEmails(tt.in)
+			if len(got) != len(tt.want) {
+				t.Fatalf("parseAdminEmails(%q) = %v, want %v", tt.in, got, tt.want)
+			}
+			for email := range tt.want {
+				if !got[email] {
+					t.Errorf("parseAdminEmails(%q) missing %q, got %v", tt.in, email, got)
+				}
+			}
+		})
+	}
+}
+
 func TestMeRequiresAuth(t *testing.T) {
 	e := testServer(t)
 	rec := do(e, http.MethodGet, "/api/me", "", nil)

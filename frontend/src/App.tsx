@@ -1,7 +1,10 @@
 import {Route, Routes} from 'react-router';
 import Layout from './components/Layout';
+import Footer from './components/Footer';
 import UpdateToast from './components/UpdateToast';
+import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
+import AdminPage from './pages/AdminPage';
 import BandPage from './pages/BandPage';
 import BandSongPage from './pages/BandSongPage';
 import BandsPage from './pages/BandsPage';
@@ -18,6 +21,7 @@ export default function App() {
   return (
     <>
       <UpdateToast />
+      <Footer />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
@@ -32,6 +36,9 @@ export default function App() {
             <Route path="/bands" element={<BandsPage />} />
             <Route path="/bands/:id" element={<BandPage />} />
             <Route path="/bands/:id/songs/:songId" element={<BandSongPage />} />
+            <Route element={<RequireAdmin />}>
+              <Route path="/admin" element={<AdminPage />} />
+            </Route>
           </Route>
         </Route>
       </Routes>
