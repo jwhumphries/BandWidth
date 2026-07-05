@@ -13,8 +13,12 @@ export function useDeleteAdminUser() {
   const queryClient = useQueryClient();
   return useMutation<void, ApiError, number>({
     mutationFn: id => api.delete(`/api/admin/users/${id}`),
-    onSuccess: () =>
-      void queryClient.invalidateQueries({queryKey: ['admin', 'users']}),
+    onSuccess: () => {
+      // Deleting a user cascades to any band they created, so the Bands
+      // tab can go stale too.
+      void queryClient.invalidateQueries({queryKey: ['admin', 'users']});
+      void queryClient.invalidateQueries({queryKey: ['admin', 'bands']});
+    },
   });
 }
 

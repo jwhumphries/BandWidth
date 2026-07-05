@@ -24,6 +24,7 @@ export default function AdminPage() {
       <div role="tablist" className="tabs tabs-boxed w-fit">
         <button
           role="tab"
+          aria-selected={tab === 'users'}
           className={`tab ${tab === 'users' ? 'tab-active' : ''}`}
           onClick={() => setTab('users')}
         >
@@ -31,6 +32,7 @@ export default function AdminPage() {
         </button>
         <button
           role="tab"
+          aria-selected={tab === 'bands'}
           className={`tab ${tab === 'bands' ? 'tab-active' : ''}`}
           onClick={() => setTab('bands')}
         >
@@ -38,6 +40,7 @@ export default function AdminPage() {
         </button>
         <button
           role="tab"
+          aria-selected={tab === 'access'}
           className={`tab ${tab === 'access' ? 'tab-active' : ''}`}
           onClick={() => setTab('access')}
         >

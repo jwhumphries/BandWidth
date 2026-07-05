@@ -81,16 +81,7 @@ func (r *Repo) DeleteUser(userID uint) error {
 				return err
 			}
 		}
-		var folders []model.Folder
-		if err := tx.Where("owner_user_id = ?", userID).Find(&folders).Error; err != nil {
-			return err
-		}
-		for _, f := range folders {
-			if err := tx.Where("folder_id = ?", f.ID).Delete(&model.FolderEntry{}).Error; err != nil {
-				return err
-			}
-		}
-		if err := tx.Where("owner_user_id = ?", userID).Delete(&model.Folder{}).Error; err != nil {
+		if err := deleteOwnedFoldersTx(tx, userSubj(userID)); err != nil {
 			return err
 		}
 		if err := tx.Where("user_id = ?", userID).Delete(&model.BandMember{}).Error; err != nil {

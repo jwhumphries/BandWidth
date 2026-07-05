@@ -179,16 +179,7 @@ func deleteBandTx(tx *gorm.DB, bandID uint) error {
 	if err := tx.Where("band_id = ?", bandID).Delete(&model.BandInvite{}).Error; err != nil {
 		return err
 	}
-	var folders []model.Folder
-	if err := tx.Where("owner_band_id = ?", bandID).Find(&folders).Error; err != nil {
-		return err
-	}
-	for _, f := range folders {
-		if err := tx.Where("folder_id = ?", f.ID).Delete(&model.FolderEntry{}).Error; err != nil {
-			return err
-		}
-	}
-	if err := tx.Where("owner_band_id = ?", bandID).Delete(&model.Folder{}).Error; err != nil {
+	if err := deleteOwnedFoldersTx(tx, bandSubj(bandID)); err != nil {
 		return err
 	}
 	return tx.Delete(&model.Band{}, bandID).Error

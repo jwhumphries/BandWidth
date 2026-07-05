@@ -67,6 +67,7 @@ func (a *API) AdminDeleteUser(c *echo.Context) error {
 	if err := a.Repo.DeleteUser(id); err != nil {
 		return err
 	}
+	a.logger().Info("admin deleted user", "admin", admin.Email, "targetUserId", id)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -81,6 +82,10 @@ func (a *API) AdminBands(c *echo.Context) error {
 
 // AdminDeleteBand deletes any band.
 func (a *API) AdminDeleteBand(c *echo.Context) error {
+	admin := appmw.CurrentUser(c)
+	if admin == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
 	id, err := adminBandID(c)
 	if err != nil {
 		return err
@@ -91,6 +96,7 @@ func (a *API) AdminDeleteBand(c *echo.Context) error {
 	if err := a.Repo.DeleteBand(id); err != nil {
 		return err
 	}
+	a.logger().Info("admin deleted band", "admin", admin.Email, "targetBandId", id)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -116,6 +122,10 @@ type setAccessPolicyRequest struct {
 
 // AdminSetAccessPolicy toggles signup gating.
 func (a *API) AdminSetAccessPolicy(c *echo.Context) error {
+	admin := appmw.CurrentUser(c)
+	if admin == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
 	var req setAccessPolicyRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
@@ -123,6 +133,7 @@ func (a *API) AdminSetAccessPolicy(c *echo.Context) error {
 	if err := a.Repo.SetAccessPolicyEnabled(req.Enabled); err != nil {
 		return err
 	}
+	a.logger().Info("admin changed access policy", "admin", admin.Email, "enabled", req.Enabled)
 	return c.NoContent(http.StatusNoContent)
 }
 
@@ -151,6 +162,7 @@ func (a *API) AdminAddAllowedEmail(c *echo.Context) error {
 		}
 		return err
 	}
+	a.logger().Info("admin added allowed email", "admin", admin.Email, "email", email)
 	return c.JSON(http.StatusCreated, map[string]any{
 		"id":        entry.ID,
 		"email":     entry.Email,
@@ -160,6 +172,10 @@ func (a *API) AdminAddAllowedEmail(c *echo.Context) error {
 
 // AdminRemoveAllowedEmail removes an allow-list entry.
 func (a *API) AdminRemoveAllowedEmail(c *echo.Context) error {
+	admin := appmw.CurrentUser(c)
+	if admin == nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
+	}
 	id, err := adminAllowedEmailID(c)
 	if err != nil {
 		return err
@@ -167,5 +183,6 @@ func (a *API) AdminRemoveAllowedEmail(c *echo.Context) error {
 	if err := a.Repo.RemoveAllowedEmail(id); err != nil {
 		return notFoundOr(err, "allow-list entry")
 	}
+	a.logger().Info("admin removed allowed email", "admin", admin.Email, "targetEntryId", id)
 	return c.NoContent(http.StatusNoContent)
 }
