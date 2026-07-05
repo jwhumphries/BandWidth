@@ -17,6 +17,10 @@ services:
       - BANDWIDTH_PORT=:8080
       - BANDWIDTH_LOG_LEVEL=debug
       - BANDWIDTH_BASE_URL=http://localhost:3000
+      # Passed through from the host shell if set (e.g. `export
+      # BANDWIDTH_ADMIN_EMAILS=you@example.com` before `just dev`); no
+      # value here means no admins in dev by default.
+      - BANDWIDTH_ADMIN_EMAILS
     stdin_open: true
     tty: true
 
