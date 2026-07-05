@@ -11,11 +11,29 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/repository"
 )
 
-// adminTargetID parses the :id path parameter shared by the admin delete routes.
-func adminTargetID(c *echo.Context) (uint, error) {
+// adminUserID parses the :id path parameter for user-targeted admin routes.
+func adminUserID(c *echo.Context) (uint, error) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil || id == 0 {
-		return 0, echo.NewHTTPError(http.StatusNotFound, "not found")
+		return 0, echo.NewHTTPError(http.StatusNotFound, "user not found")
+	}
+	return uint(id), nil
+}
+
+// adminBandID parses the :id path parameter for band-targeted admin routes.
+func adminBandID(c *echo.Context) (uint, error) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		return 0, echo.NewHTTPError(http.StatusNotFound, "band not found")
+	}
+	return uint(id), nil
+}
+
+// adminAllowedEmailID parses the :id path parameter for allow-list admin routes.
+func adminAllowedEmailID(c *echo.Context) (uint, error) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil || id == 0 {
+		return 0, echo.NewHTTPError(http.StatusNotFound, "allow-list entry not found")
 	}
 	return uint(id), nil
 }
@@ -36,7 +54,7 @@ func (a *API) AdminDeleteUser(c *echo.Context) error {
 	if admin == nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "user not in context")
 	}
-	id, err := adminTargetID(c)
+	id, err := adminUserID(c)
 	if err != nil {
 		return err
 	}
@@ -63,7 +81,7 @@ func (a *API) AdminBands(c *echo.Context) error {
 
 // AdminDeleteBand deletes any band.
 func (a *API) AdminDeleteBand(c *echo.Context) error {
-	id, err := adminTargetID(c)
+	id, err := adminBandID(c)
 	if err != nil {
 		return err
 	}
@@ -142,7 +160,7 @@ func (a *API) AdminAddAllowedEmail(c *echo.Context) error {
 
 // AdminRemoveAllowedEmail removes an allow-list entry.
 func (a *API) AdminRemoveAllowedEmail(c *echo.Context) error {
-	id, err := adminTargetID(c)
+	id, err := adminAllowedEmailID(c)
 	if err != nil {
 		return err
 	}

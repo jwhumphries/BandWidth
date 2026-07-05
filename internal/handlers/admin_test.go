@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -71,6 +72,11 @@ func TestAdminDeleteUser(t *testing.T) {
 	rec := jsonReq(e, http.MethodDelete, fmt.Sprintf("/api/admin/users/%d", adminID), "", admin)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("self-delete: %d, want 400", rec.Code)
+	}
+
+	rec = jsonReq(e, http.MethodDelete, "/api/admin/users/abc", "", admin)
+	if rec.Code != http.StatusNotFound || !strings.Contains(rec.Body.String(), "user not found") {
+		t.Fatalf("delete malformed user id: %d %s, want 404 user not found", rec.Code, rec.Body.String())
 	}
 
 	rec = jsonReq(e, http.MethodDelete, "/api/admin/users/9999", "", admin)
