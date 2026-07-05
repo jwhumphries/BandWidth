@@ -232,6 +232,16 @@ func newEcho(logger *slog.Logger, api *handlers.API) (*echo.Echo, error) {
 	))
 	apiGroup.GET("/invites/link/:token", api.PreviewInviteLink, previewLimiter)
 
+	admin := apiGroup.Group("/admin", appmw.RequireAuth(api.Repo), appmw.RequireAdmin(api.IsAdminEmail))
+	admin.GET("/users", api.AdminUsers)
+	admin.DELETE("/users/:id", api.AdminDeleteUser)
+	admin.GET("/bands", api.AdminBands)
+	admin.DELETE("/bands/:id", api.AdminDeleteBand)
+	admin.GET("/access-policy", api.AdminGetAccessPolicy)
+	admin.PUT("/access-policy", api.AdminSetAccessPolicy)
+	admin.POST("/access-policy/emails", api.AdminAddAllowedEmail)
+	admin.DELETE("/access-policy/emails/:id", api.AdminRemoveAllowedEmail)
+
 	dist, err := fs.Sub(static.Dist, "dist")
 	if err != nil {
 		return nil, err
