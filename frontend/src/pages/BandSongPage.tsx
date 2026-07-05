@@ -1,3 +1,4 @@
+import {FolderTree, Link2, Repeat} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
@@ -183,7 +184,10 @@ export default function BandSongPage() {
 
       <section className="card bg-base-100 shadow">
         <div className="card-body">
-          <h2 className="card-title">Rehearsals</h2>
+          <h2 className="card-title">
+            <Repeat className="text-primary size-5" />
+            Rehearsals
+          </h2>
           <p>
             {song.rehearsalCount} rehearsals
             {song.lastRehearsedAt && <> · last on {song.lastRehearsedAt}</>}
@@ -203,7 +207,10 @@ export default function BandSongPage() {
 
       <section className="card bg-base-100 shadow">
         <div className="card-body">
-          <h2 className="card-title">Band links</h2>
+          <h2 className="card-title">
+            <Link2 className="text-primary size-5" />
+            Band links
+          </h2>
           <ul className="flex flex-col gap-1">
             {song.resources.map(r => (
               <li key={r.id} className="flex items-center gap-2">
