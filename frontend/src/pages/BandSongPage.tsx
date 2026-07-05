@@ -2,6 +2,7 @@ import {FolderTree, Link2, Repeat} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
+import BandFolderPicker from '../components/bands/BandFolderPicker';
 import ConfirmModal from '../components/songs/ConfirmModal';
 import {useBand} from '../hooks/bands';
 import {
@@ -259,6 +260,16 @@ export default function BandSongPage() {
               </button>
             </form>
           )}
+        </div>
+      </section>
+
+      <section className="card bg-base-100 shadow">
+        <div className="card-body">
+          <h2 className="card-title">
+            <FolderTree className="text-primary size-5" />
+            Folders
+          </h2>
+          <BandFolderPicker bandId={bandId} songId={songId} canEdit={canEdit} />
         </div>
       </section>
 
