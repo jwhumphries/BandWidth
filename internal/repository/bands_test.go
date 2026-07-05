@@ -122,3 +122,32 @@ func TestRenameAndDeleteBand(t *testing.T) {
 		t.Error("membership survived delete")
 	}
 }
+
+func TestDeleteBandRemovesBandFolders(t *testing.T) {
+	repo := testRepo(t)
+	alice, _ := repo.CreateUser("alice", "alice@example.com", "h")
+	band, _ := repo.CreateBand(alice.ID, "Band")
+	folder, err := repo.CreateBandFolder(band.ID, "Setlist")
+	if err != nil {
+		t.Fatalf("CreateBandFolder: %v", err)
+	}
+	song, _ := repo.CreateBandSong(band.ID, "Song", "X")
+	if err := repo.SetBandFolderEntries(folder.ID, band.ID, []uint{song.ID}); err != nil {
+		t.Fatalf("SetBandFolderEntries: %v", err)
+	}
+
+	if err := repo.DeleteBand(band.ID); err != nil {
+		t.Fatalf("DeleteBand: %v", err)
+	}
+
+	var folders int64
+	repo.db.Model(&model.Folder{}).Where("owner_band_id = ?", band.ID).Count(&folders)
+	if folders != 0 {
+		t.Errorf("DeleteBand left %d orphan Folder row(s) for band %d", folders, band.ID)
+	}
+	var entries int64
+	repo.db.Model(&model.FolderEntry{}).Where("folder_id = ?", folder.ID).Count(&entries)
+	if entries != 0 {
+		t.Errorf("DeleteBand left %d orphan FolderEntry row(s) for folder %d", entries, folder.ID)
+	}
+}

@@ -209,14 +209,21 @@ func (r *Repo) DeleteSong(songID, userID uint) error {
 		return fmt.Errorf("song not found: %w", err)
 	}
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		for _, m := range []any{
-			&model.FolderEntry{}, &model.PracticeEvent{},
-			&model.Resource{}, &model.SongAnnotation{},
-		} {
-			if err := tx.Where("song_id = ?", songID).Delete(m).Error; err != nil {
-				return err
-			}
-		}
-		return tx.Delete(&model.Song{}, songID).Error
+		return deleteSongRowsTx(tx, songID)
 	})
+}
+
+// deleteSongRowsTx removes a song and everything attached to it inside an
+// existing transaction, so DeleteUser can cascade owned songs without
+// nesting transactions.
+func deleteSongRowsTx(tx *gorm.DB, songID uint) error {
+	for _, m := range []any{
+		&model.FolderEntry{}, &model.PracticeEvent{},
+		&model.Resource{}, &model.SongAnnotation{},
+	} {
+		if err := tx.Where("song_id = ?", songID).Delete(m).Error; err != nil {
+			return err
+		}
+	}
+	return tx.Delete(&model.Song{}, songID).Error
 }

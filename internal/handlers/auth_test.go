@@ -212,3 +212,61 @@ func TestLoginWithTOTP(t *testing.T) {
 		t.Fatalf("reused backup code: %d, want 401", rec.Code)
 	}
 }
+
+func TestSignupAccessPolicy(t *testing.T) {
+	e, api := newTestAPI(t)
+	if err := api.Repo.SetAccessPolicyEnabled(true); err != nil {
+		t.Fatal(err)
+	}
+
+	rec := postJSON(e, "/api/auth/signup",
+		`{"username":"outsider","email":"outsider@example.com","password":"hunter2hunter2"}`)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want 403", rec.Code)
+	}
+
+	admin, _ := api.Repo.CreateUser("admin", "admin@example.com", "h")
+	if _, err := api.Repo.AddAllowedEmail("friend@example.com", admin.ID); err != nil {
+		t.Fatal(err)
+	}
+	rec = postJSON(e, "/api/auth/signup",
+		`{"username":"friend","email":"friend@example.com","password":"hunter2hunter2"}`)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("allow-listed signup: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSignupAccessPolicyAllowsAdminEmail(t *testing.T) {
+	e, api := newTestAPI(t)
+	api.AdminEmails = map[string]bool{"admin@example.com": true}
+	if err := api.Repo.SetAccessPolicyEnabled(true); err != nil {
+		t.Fatal(err)
+	}
+
+	rec := postJSON(e, "/api/auth/signup",
+		`{"username":"admin","email":"admin@example.com","password":"hunter2hunter2"}`)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("admin signup: %d %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestMeIncludesIsAdmin(t *testing.T) {
+	e, api := newTestAPI(t)
+	api.AdminEmails = map[string]bool{"alice@example.com": true}
+	rec := postJSON(e, "/api/auth/signup",
+		`{"username":"alice","email":"alice@example.com","password":"hunter2hunter2"}`)
+	cookie := sessionCookie(t, rec)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	req.AddCookie(cookie)
+	mrec := httptest.NewRecorder()
+	e.ServeHTTP(mrec, req)
+
+	var body map[string]any
+	if err := json.Unmarshal(mrec.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body["isAdmin"] != true {
+		t.Errorf("isAdmin = %v, want true", body["isAdmin"])
+	}
+}

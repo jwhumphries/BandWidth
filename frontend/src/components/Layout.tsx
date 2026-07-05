@@ -3,13 +3,14 @@ import {
   LibraryBig,
   LogOut,
   Moon,
+  Shield,
   Sun,
   User,
   Users,
 } from 'lucide-react';
 import type {ReactNode} from 'react';
 import {Link, NavLink, Outlet} from 'react-router';
-import {useLogout} from '../hooks/auth';
+import {useLogout, useMe} from '../hooks/auth';
 import {useMyInvites} from '../hooks/invites';
 import {useTheme} from '../lib/theme';
 
@@ -51,6 +52,7 @@ function NavItem({
 export default function Layout() {
   const logout = useLogout();
   const {data: invites = []} = useMyInvites();
+  const {data: me} = useMe();
   const {theme, toggle} = useTheme();
 
   return (
@@ -87,6 +89,13 @@ export default function Layout() {
               icon={<User className="size-4" />}
               label="Profile"
             />
+            {me?.isAdmin && (
+              <NavItem
+                to="/admin"
+                icon={<Shield className="size-4" />}
+                label="Admin"
+              />
+            )}
 
             <span className="bg-base-300/70 mx-1 hidden h-6 w-px sm:block" />
 

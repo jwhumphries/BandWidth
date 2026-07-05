@@ -37,3 +37,17 @@ func CurrentUser(c *echo.Context) *model.User {
 	user, _ := c.Get(userContextKey).(*model.User)
 	return user
 }
+
+// RequireAdmin rejects callers whose email is not a configured site admin.
+// Must run after RequireAuth so CurrentUser is populated.
+func RequireAdmin(isAdminEmail func(string) bool) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			user := CurrentUser(c)
+			if user == nil || !isAdminEmail(user.Email) {
+				return echo.NewHTTPError(http.StatusForbidden, "admin access required")
+			}
+			return next(c)
+		}
+	}
+}

@@ -16,6 +16,18 @@ type FolderWithSongs struct {
 	SongIDs  []uint `json:"songIds"`
 }
 
+// deleteOwnedFoldersTx removes every folder this subject owns, and their
+// entries, in two batched deletes (no per-folder round trip). Used when a
+// user or band is being deleted entirely. Runs inside tx.
+func deleteOwnedFoldersTx(tx *gorm.DB, s subj) error {
+	cond, id := s.ownerScope()
+	if err := tx.Where(`folder_id IN (SELECT id FROM folders WHERE `+cond+`)`, id).
+		Delete(&model.FolderEntry{}).Error; err != nil {
+		return err
+	}
+	return tx.Where(cond, id).Delete(&model.Folder{}).Error
+}
+
 // CreateFolder appends a folder to the user's list.
 func (r *Repo) CreateFolder(userID uint, name string) (*model.Folder, error) {
 	return r.createFolder(userSubj(userID), name)

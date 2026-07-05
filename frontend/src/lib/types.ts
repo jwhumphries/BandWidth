@@ -3,6 +3,7 @@ export interface User {
   username: string;
   email: string;
   totpEnabled: boolean;
+  isAdmin: boolean;
 }
 
 export interface AuthFeatures {
@@ -121,4 +122,29 @@ export interface CreatedInvite {
   invitedUsername?: string;
   token?: string;
   isLink?: boolean;
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface AdminBand {
+  id: number;
+  name: string;
+  creatorUsername: string;
+  memberCount: number;
+}
+
+export interface AllowedEmail {
+  id: number;
+  email: string;
+  createdAt: string;
+}
+
+export interface AccessPolicy {
+  enabled: boolean;
+  allowedEmails: AllowedEmail[];
 }

@@ -148,30 +148,39 @@ func (r *Repo) RemoveMember(bandID, userID uint) error {
 // first. Atomic.
 func (r *Repo) DeleteBand(bandID uint) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		var songs []model.Song
-		if err := tx.Where("owner_band_id = ?", bandID).Find(&songs).Error; err != nil {
-			return err
-		}
-		var members []model.BandMember
-		if err := tx.Where("band_id = ?", bandID).Find(&members).Error; err != nil {
-			return err
-		}
-		for i := range songs {
-			for _, m := range members {
-				if err := convertBandSongForUser(tx, &songs[i], m.UserID); err != nil {
-					return err
-				}
-			}
-			if err := deleteBandSongRows(tx, songs[i].ID); err != nil {
+		return deleteBandTx(tx, bandID)
+	})
+}
+
+// deleteBandTx runs DeleteBand's work inside an existing transaction, so
+// DeleteUser can cascade a created band without nesting transactions.
+func deleteBandTx(tx *gorm.DB, bandID uint) error {
+	var songs []model.Song
+	if err := tx.Where("owner_band_id = ?", bandID).Find(&songs).Error; err != nil {
+		return err
+	}
+	var members []model.BandMember
+	if err := tx.Where("band_id = ?", bandID).Find(&members).Error; err != nil {
+		return err
+	}
+	for i := range songs {
+		for _, m := range members {
+			if err := convertBandSongForUser(tx, &songs[i], m.UserID); err != nil {
 				return err
 			}
 		}
-		if err := tx.Where("band_id = ?", bandID).Delete(&model.BandMember{}).Error; err != nil {
+		if err := deleteBandSongRows(tx, songs[i].ID); err != nil {
 			return err
 		}
-		if err := tx.Where("band_id = ?", bandID).Delete(&model.BandInvite{}).Error; err != nil {
-			return err
-		}
-		return tx.Delete(&model.Band{}, bandID).Error
-	})
+	}
+	if err := tx.Where("band_id = ?", bandID).Delete(&model.BandMember{}).Error; err != nil {
+		return err
+	}
+	if err := tx.Where("band_id = ?", bandID).Delete(&model.BandInvite{}).Error; err != nil {
+		return err
+	}
+	if err := deleteOwnedFoldersTx(tx, bandSubj(bandID)); err != nil {
+		return err
+	}
+	return tx.Delete(&model.Band{}, bandID).Error
 }
