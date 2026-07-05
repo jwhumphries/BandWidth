@@ -183,4 +183,14 @@ func TestAdminAccessPolicy(t *testing.T) {
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("remove email: %d %s", rec.Code, rec.Body.String())
 	}
+
+	rec = jsonReq(e, http.MethodPut, "/api/admin/access-policy", `{not valid json`, admin)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("malformed set-policy body: %d, want 400", rec.Code)
+	}
+
+	rec = jsonReq(e, http.MethodPost, "/api/admin/access-policy/emails", `{not valid json`, admin)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("malformed add-email body: %d, want 400", rec.Code)
+	}
 }

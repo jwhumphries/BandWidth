@@ -99,6 +99,7 @@ func (r *Repo) SetAccessPolicyEnabled(enabled bool) error {
 
 // EmailAllowed reports whether email is on the signup allow-list.
 func (r *Repo) EmailAllowed(email string) (bool, error) {
+	email = normalizeEmail(email)
 	var n int64
 	if err := r.db.Model(&model.AllowedEmail{}).Where("email = ?", email).Count(&n).Error; err != nil {
 		return false, err
@@ -121,7 +122,7 @@ func (r *Repo) AllowedEmails() ([]AllowedEmailInfo, error) {
 
 // AddAllowedEmail adds an email to the signup allow-list.
 func (r *Repo) AddAllowedEmail(email string, addedBy uint) (*model.AllowedEmail, error) {
-	row := &model.AllowedEmail{Email: email, CreatedBy: addedBy}
+	row := &model.AllowedEmail{Email: normalizeEmail(email), CreatedBy: addedBy}
 	if err := r.db.Create(row).Error; err != nil {
 		return nil, err
 	}

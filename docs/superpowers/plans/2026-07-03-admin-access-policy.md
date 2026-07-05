@@ -1036,36 +1036,49 @@ func (a *API) userResponse(u *model.User) map[string]any {
 Every call site is already inside a method with receiver `a *API`, so this is a mechanical `userResponse(user)` → `a.userResponse(user)` substitution, `replace_all` within each file:
 
 - `internal/handlers/account.go` — three identical occurrences (lines 20, 59, 102):
+
   ```go
   return c.JSON(http.StatusOK, userResponse(user))
   ```
+
   become:
+
   ```go
   return c.JSON(http.StatusOK, a.userResponse(user))
   ```
 
 - `internal/handlers/auth.go` — line 86:
+
   ```go
   return c.JSON(http.StatusCreated, userResponse(user))
   ```
+
   becomes:
+
   ```go
   return c.JSON(http.StatusCreated, a.userResponse(user))
   ```
+
   and line 132:
+
   ```go
   return c.JSON(http.StatusOK, userResponse(user))
   ```
+
   becomes:
+
   ```go
   return c.JSON(http.StatusOK, a.userResponse(user))
   ```
 
 - `internal/handlers/twofa.go` — line 100:
+
   ```go
   return c.JSON(http.StatusOK, userResponse(user))
   ```
+
   becomes:
+
   ```go
   return c.JSON(http.StatusOK, a.userResponse(user))
   ```

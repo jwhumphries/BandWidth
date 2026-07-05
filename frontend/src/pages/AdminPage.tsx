@@ -23,33 +23,63 @@ export default function AdminPage() {
       <h1 className="font-display text-3xl font-bold tracking-tight">Admin</h1>
       <div role="tablist" className="tabs tabs-boxed w-fit">
         <button
+          id="admin-tab-users"
           role="tab"
           aria-selected={tab === 'users'}
+          aria-controls="admin-panel-users"
           className={`tab ${tab === 'users' ? 'tab-active' : ''}`}
           onClick={() => setTab('users')}
         >
           Users
         </button>
         <button
+          id="admin-tab-bands"
           role="tab"
           aria-selected={tab === 'bands'}
+          aria-controls="admin-panel-bands"
           className={`tab ${tab === 'bands' ? 'tab-active' : ''}`}
           onClick={() => setTab('bands')}
         >
           Bands
         </button>
         <button
+          id="admin-tab-access"
           role="tab"
           aria-selected={tab === 'access'}
+          aria-controls="admin-panel-access"
           className={`tab ${tab === 'access' ? 'tab-active' : ''}`}
           onClick={() => setTab('access')}
         >
           Access policy
         </button>
       </div>
-      {tab === 'users' && <AdminUsersPanel />}
-      {tab === 'bands' && <AdminBandsPanel />}
-      {tab === 'access' && <AdminAccessPolicyPanel />}
+      {tab === 'users' && (
+        <div
+          id="admin-panel-users"
+          role="tabpanel"
+          aria-labelledby="admin-tab-users"
+        >
+          <AdminUsersPanel />
+        </div>
+      )}
+      {tab === 'bands' && (
+        <div
+          id="admin-panel-bands"
+          role="tabpanel"
+          aria-labelledby="admin-tab-bands"
+        >
+          <AdminBandsPanel />
+        </div>
+      )}
+      {tab === 'access' && (
+        <div
+          id="admin-panel-access"
+          role="tabpanel"
+          aria-labelledby="admin-tab-access"
+        >
+          <AdminAccessPolicyPanel />
+        </div>
+      )}
     </div>
   );
 }

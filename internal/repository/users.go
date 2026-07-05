@@ -8,6 +8,12 @@ import (
 	"github.com/jwhumphries/bandwidth/internal/model"
 )
 
+// normalizeEmail trims and lowercases an email so allow-list matching
+// doesn't depend on every caller normalizing consistently.
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
 // IsDuplicate reports whether err is a unique-constraint violation.
 //
 // It matches SQLite's "UNIQUE constraint failed" message text because GORM's
@@ -88,6 +94,9 @@ func (r *Repo) DeleteUser(userID uint) error {
 			return err
 		}
 		if err := tx.Where("invited_user_id = ?", userID).Delete(&model.BandInvite{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("created_by = ?", userID).Delete(&model.BandInvite{}).Error; err != nil {
 			return err
 		}
 		if err := tx.Where("user_id = ?", userID).Delete(&model.Session{}).Error; err != nil {

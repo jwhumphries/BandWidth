@@ -44,6 +44,9 @@ describe('AdminPage', () => {
           if (url.endsWith('/api/admin/bands') && method === 'GET') {
             return Promise.resolve(jsonResponse(200, bands));
           }
+          if (url.includes('/api/admin/bands/') && method === 'DELETE') {
+            return Promise.resolve(jsonResponse(204, null));
+          }
           if (url.endsWith('/api/admin/access-policy') && method === 'GET') {
             return Promise.resolve(jsonResponse(200, policy));
           }
@@ -57,6 +60,12 @@ describe('AdminPage', () => {
             return Promise.resolve(
               jsonResponse(201, {id: 9, email: 'friend@example.com'}),
             );
+          }
+          if (
+            url.includes('/api/admin/access-policy/emails/') &&
+            method === 'DELETE'
+          ) {
+            return Promise.resolve(jsonResponse(204, null));
           }
           return Promise.resolve(jsonResponse(404, {message: 'not found'}));
         }),
@@ -89,6 +98,28 @@ describe('AdminPage', () => {
     expect(screen.getByText(/created by admin/i)).toBeInTheDocument();
   });
 
+  it('deletes a band after confirming', async () => {
+    renderWithProviders(<AdminPage />);
+    await userEvent.click(screen.getByRole('tab', {name: /bands/i}));
+    await screen.findByText('The Quietones');
+
+    await userEvent.click(
+      screen.getByRole('button', {name: /delete the quietones/i}),
+    );
+    await userEvent.click(await screen.findByRole('button', {name: 'Delete'}));
+
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls;
+      expect(
+        calls.some(
+          ([input, init]) =>
+            String(input).endsWith('/api/admin/bands/1') &&
+            init?.method === 'DELETE',
+        ),
+      ).toBe(true);
+    });
+  });
+
   it('toggles the access policy and adds an allowed email', async () => {
     renderWithProviders(<AdminPage />);
     await userEvent.click(screen.getByRole('tab', {name: /access policy/i}));
@@ -119,6 +150,32 @@ describe('AdminPage', () => {
           ([input, init]) =>
             String(input).endsWith('/api/admin/access-policy/emails') &&
             init?.method === 'POST',
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it('removes an allowed email', async () => {
+    policy = {
+      enabled: true,
+      allowedEmails: [
+        {id: 5, email: 'friend@example.com', createdAt: '2026-01-01'},
+      ],
+    };
+    renderWithProviders(<AdminPage />);
+    await userEvent.click(screen.getByRole('tab', {name: /access policy/i}));
+
+    await userEvent.click(
+      screen.getByRole('button', {name: /remove friend@example.com/i}),
+    );
+
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls;
+      expect(
+        calls.some(
+          ([input, init]) =>
+            String(input).endsWith('/api/admin/access-policy/emails/5') &&
+            init?.method === 'DELETE',
         ),
       ).toBe(true);
     });
