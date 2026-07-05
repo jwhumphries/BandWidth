@@ -56,6 +56,20 @@ func sessionCookie(t *testing.T, rec *httptest.ResponseRecorder) *http.Cookie {
 	return nil
 }
 
+func TestDummyPasswordHash(t *testing.T) {
+	h1 := dummyPasswordHash()
+	h2 := dummyPasswordHash()
+	if h1 == "" {
+		t.Fatal("dummy hash is empty")
+	}
+	if h1 != h2 {
+		t.Fatal("dummy hash not memoized across calls")
+	}
+	if auth.VerifyPassword("any password", h1) {
+		t.Fatal("dummy hash verified an arbitrary password")
+	}
+}
+
 func TestSignup(t *testing.T) {
 	e, _ := newTestAPI(t)
 
