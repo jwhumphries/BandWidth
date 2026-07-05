@@ -1,5 +1,6 @@
 import {Route, Routes} from 'react-router';
 import Layout from './components/Layout';
+import Footer from './components/Footer';
 import UpdateToast from './components/UpdateToast';
 import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <>
       <UpdateToast />
+      <Footer />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
