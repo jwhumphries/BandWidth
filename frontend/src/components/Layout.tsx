@@ -1,5 +1,6 @@
 import {
   AudioLines,
+  Dumbbell,
   LibraryBig,
   LogOut,
   Moon,
@@ -77,6 +78,11 @@ export default function Layout() {
               to="/"
               icon={<LibraryBig className="size-4" />}
               label="Library"
+            />
+            <NavItem
+              to="/practice"
+              icon={<Dumbbell className="size-4" />}
+              label="Practice"
             />
             <NavItem
               to="/bands"

@@ -12,6 +12,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import HomePage from './pages/HomePage';
 import JoinPage from './pages/JoinPage';
 import LoginPage from './pages/LoginPage';
+import PracticePage from './pages/PracticePage';
 import ProfilePage from './pages/ProfilePage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SignupPage from './pages/SignupPage';
@@ -31,6 +32,7 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route element={<Layout />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/practice" element={<PracticePage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/songs/:id" element={<SongPage />} />
               <Route path="/bands" element={<BandsPage />} />
