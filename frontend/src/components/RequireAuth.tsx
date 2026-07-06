@@ -7,7 +7,7 @@ export default function RequireAuth() {
   const {isPending, isError, error, refetch} = useMe();
   if (isPending) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <span
           className="loading loading-spinner loading-lg"
           aria-label="Loading"
@@ -28,7 +28,7 @@ export default function RequireAuth() {
       );
     }
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="flex flex-1 flex-col items-center justify-center gap-4">
         <p>Could not reach the server.</p>
         <button className="btn btn-primary" onClick={() => void refetch()}>
           Retry

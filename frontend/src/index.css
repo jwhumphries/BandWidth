@@ -174,3 +174,68 @@
     --chip: var(--status-nailed);
   }
 }
+
+/* ── React Day Picker (used by DatePicker) ───────────────────────────── */
+.react-day-picker {
+  @apply p-3;
+}
+
+.react-day-picker .rdp-month {
+  @apply w-full;
+}
+
+.react-day-picker .rdp-caption {
+  @apply mb-2 flex items-center justify-between;
+}
+
+.react-day-picker .rdp-caption_label {
+  @apply font-bold;
+  font-size: var(--text-base);
+}
+
+.react-day-picker .rdp-nav {
+  @apply flex gap-1;
+}
+
+.react-day-picker .rdp-button_previous,
+.react-day-picker .rdp-button_next {
+  @apply btn btn-ghost btn-xs btn-circle;
+}
+
+.react-day-picker .rdp-month_grid {
+  @apply w-full border-collapse;
+}
+
+.react-day-picker .rdp-weekdays {
+  @apply opacity-70;
+  font-size: var(--text-sm);
+}
+
+.react-day-picker .rdp-weekday {
+  @apply p-2 text-center font-medium;
+}
+
+.react-day-picker .rdp-day {
+  @apply p-0 text-center;
+}
+
+.react-day-picker .rdp-day_button {
+  @apply h-10 w-10 cursor-pointer rounded-lg transition-colors hover:bg-base-300;
+  font-size: var(--text-sm);
+}
+
+.react-day-picker .rdp-day_button:disabled {
+  @apply cursor-not-allowed opacity-30 hover:bg-transparent;
+}
+
+.react-day-picker .rdp-selected .rdp-day_button {
+  @apply bg-primary text-primary-content hover:bg-primary;
+}
+
+.react-day-picker .rdp-today .rdp-day_button {
+  @apply ring-primary font-bold ring-1;
+}
+
+.react-day-picker .rdp-outside .rdp-day_button {
+  @apply opacity-40;
+}

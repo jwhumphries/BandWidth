@@ -40,7 +40,7 @@ export default function LoginPage() {
       : null;
 
   return (
-    <main className="hero bg-base-200 min-h-screen">
+    <main className="hero bg-base-200 flex-1">
       <div className="hero-content w-full max-w-sm flex-col">
         <div className="flex flex-col items-center gap-3">
           <span className="bg-primary text-primary-content grid size-14 place-items-center rounded-box shadow-lg">
