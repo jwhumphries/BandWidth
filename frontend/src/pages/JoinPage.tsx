@@ -1,8 +1,8 @@
-import {AudioLines} from 'lucide-react';
 import type {ReactNode} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
 import {useMe} from '../hooks/auth';
 import {useJoinByLink, useLinkPreview} from '../hooks/invites';
+import Logo from '../components/Logo';
 import {ApiError} from '../lib/api';
 
 export default function JoinPage() {
@@ -13,10 +13,10 @@ export default function JoinPage() {
   const join = useJoinByLink();
 
   const card = (children: ReactNode) => (
-    <main className="hero bg-base-200 min-h-screen">
+    <main className="hero bg-base-200 flex-1">
       <div className="hero-content w-full max-w-sm flex-col gap-6">
         <span className="bg-primary text-primary-content grid size-14 place-items-center rounded-box shadow-lg">
-          <AudioLines className="size-8" strokeWidth={2.25} />
+          <Logo className="size-8" />
         </span>
         <div className="card bg-base-100 border-base-300/60 w-full border p-6 text-center shadow-xl">
           {children}

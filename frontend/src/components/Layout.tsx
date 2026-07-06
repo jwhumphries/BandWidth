@@ -1,7 +1,7 @@
 import {
-  AudioLines,
   LibraryBig,
   LogOut,
+  Metronome,
   Moon,
   Shield,
   Sun,
@@ -13,6 +13,7 @@ import {Link, NavLink, Outlet} from 'react-router';
 import {useLogout, useMe} from '../hooks/auth';
 import {useMyInvites} from '../hooks/invites';
 import {useTheme} from '../lib/theme';
+import Logo from './Logo';
 
 function NavItem({
   to,
@@ -56,7 +57,7 @@ export default function Layout() {
   const {theme, toggle} = useTheme();
 
   return (
-    <div className="bg-base-200 text-base-content min-h-screen">
+    <div className="bg-base-200 text-base-content flex-1">
       <header className="border-base-300/70 bg-base-100/80 sticky top-0 z-30 border-b backdrop-blur-lg">
         <nav className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
           <Link
@@ -65,7 +66,7 @@ export default function Layout() {
             aria-label="BandWidth home"
           >
             <span className="bg-primary text-primary-content grid size-8 place-items-center rounded-field shadow-sm transition-transform group-hover:scale-105">
-              <AudioLines className="size-5" strokeWidth={2.25} />
+              <Logo className="size-5" />
             </span>
             <span className="font-display text-xl font-bold tracking-tight">
               Band<span className="text-primary">Width</span>
@@ -77,6 +78,11 @@ export default function Layout() {
               to="/"
               icon={<LibraryBig className="size-4" />}
               label="Library"
+            />
+            <NavItem
+              to="/practice"
+              icon={<Metronome className="size-4" />}
+              label="Practice"
             />
             <NavItem
               to="/bands"

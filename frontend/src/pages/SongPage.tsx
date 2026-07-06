@@ -2,10 +2,11 @@ import {ArrowLeft, FolderTree, Link2, Repeat, Trash2} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
+import DatePicker from '../components/DatePicker';
+import FolderPicker from '../components/folders/FolderPicker';
 import BandSection from '../components/songs/BandSection';
 import ConfirmModal from '../components/songs/ConfirmModal';
 import ResourceList from '../components/songs/ResourceList';
-import FolderPicker from '../components/folders/FolderPicker';
 import {
   useDeleteSong,
   useLogPractice,
@@ -182,12 +183,10 @@ export default function SongPage() {
             >
               Practiced today
             </button>
-            <input
-              type="date"
-              className="input w-44"
-              aria-label="Backfill date"
+            <DatePicker
               value={backfill}
-              onChange={e => setBackfill(e.target.value)}
+              onChange={setBackfill}
+              aria-label="Backfill date"
             />
             <button
               className="btn btn-ghost"

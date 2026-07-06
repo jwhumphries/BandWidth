@@ -12,6 +12,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import HomePage from './pages/HomePage';
 import JoinPage from './pages/JoinPage';
 import LoginPage from './pages/LoginPage';
+import PracticePage from './pages/PracticePage';
 import ProfilePage from './pages/ProfilePage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SignupPage from './pages/SignupPage';
@@ -19,29 +20,35 @@ import SongPage from './pages/SongPage';
 
 export default function App() {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <UpdateToast />
-      <Footer />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/join/:token" element={<JoinPage />} />
-        <Route element={<RequireAuth />}>
-          <Route element={<Layout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/songs/:id" element={<SongPage />} />
-            <Route path="/bands" element={<BandsPage />} />
-            <Route path="/bands/:id" element={<BandPage />} />
-            <Route path="/bands/:id/songs/:songId" element={<BandSongPage />} />
-            <Route element={<RequireAdmin />}>
-              <Route path="/admin" element={<AdminPage />} />
+      <div className="flex flex-1 flex-col">
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/join/:token" element={<JoinPage />} />
+          <Route element={<RequireAuth />}>
+            <Route element={<Layout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/practice" element={<PracticePage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/songs/:id" element={<SongPage />} />
+              <Route path="/bands" element={<BandsPage />} />
+              <Route path="/bands/:id" element={<BandPage />} />
+              <Route
+                path="/bands/:id/songs/:songId"
+                element={<BandSongPage />}
+              />
+              <Route element={<RequireAdmin />}>
+                <Route path="/admin" element={<AdminPage />} />
+              </Route>
             </Route>
           </Route>
-        </Route>
-      </Routes>
-    </>
+        </Routes>
+      </div>
+      <Footer />
+    </div>
   );
 }

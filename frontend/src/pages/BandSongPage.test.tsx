@@ -1,5 +1,6 @@
 import {screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import {format} from 'date-fns';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {Route, Routes} from 'react-router';
 import {renderWithProviders} from '../test/utils';
@@ -21,13 +22,27 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 // The band detail (for myRole) plus the band-song detail share one stub.
-function stubFetch(myRole: string) {
+function stubFetch(
+  myRole: string,
+  folders: Array<{
+    id: number;
+    name: string;
+    position: number;
+    songIds: number[];
+  }> = [],
+) {
   vi.stubGlobal(
     'fetch',
     vi
       .fn()
       .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
+        if (url.includes('/folders/') && init?.method === 'PUT') {
+          return Promise.resolve(new Response(null, {status: 204}));
+        }
+        if (url.includes('/folders')) {
+          return Promise.resolve(jsonResponse(200, folders));
+        }
         if (init?.method === 'PATCH') {
           return Promise.resolve(
             jsonResponse(200, {...detail, status: 'nailed'}),
@@ -98,5 +113,53 @@ describe('BandSongPage', () => {
     expect(
       screen.queryByRole('button', {name: /delete song/i}),
     ).not.toBeInTheDocument();
+  });
+
+  it('shows the folders section and toggles band folder membership for editors', async () => {
+    stubFetch('admin', [{id: 10, name: 'Setlist', position: 1, songIds: []}]);
+    renderPage();
+    await screen.findByDisplayValue('Wonderwall');
+    const setlist = await screen.findByLabelText('Setlist');
+    expect(setlist).not.toBeChecked();
+
+    await userEvent.click(setlist);
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls;
+      expect(
+        calls.some(
+          ([input, init]) =>
+            String(input).includes('/bands/3/folders/10/entries') &&
+            init?.method === 'PUT' &&
+            String(init.body).includes('1'),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it('logs a rehearsal for a backfilled date picked from the calendar', async () => {
+    stubFetch('admin');
+    renderPage();
+    await screen.findByDisplayValue('Wonderwall');
+
+    const logPastDay = screen.getByRole('button', {name: /log past day/i});
+    expect(logPastDay).toBeDisabled();
+
+    await userEvent.click(screen.getByLabelText(/backfill date/i));
+    await userEvent.click(screen.getByRole('button', {name: /^today,/i}));
+    expect(logPastDay).toBeEnabled();
+    await userEvent.click(logPastDay);
+
+    const today = format(new Date(), 'yyyy-MM-dd');
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls;
+      expect(
+        calls.some(
+          ([input, init]) =>
+            String(input).includes('/bands/3/songs/1/rehearsal') &&
+            init?.method === 'PUT' &&
+            String(init.body).includes(today),
+        ),
+      ).toBe(true);
+    });
   });
 });

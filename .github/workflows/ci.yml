@@ -16,10 +16,12 @@ jobs:
     env:
       DAGGER_NO_NAG: "1"
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
 
       - name: Check
-        uses: dagger/dagger-for-github@b81317a976cb7f7125469707321849737cd1b3bc # v7
+        uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
         with:
           version: "latest"
           verb: call
@@ -35,10 +37,12 @@ jobs:
     env:
       DAGGER_NO_NAG: "1"
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
 
       - name: Release build
-        uses: dagger/dagger-for-github@b81317a976cb7f7125469707321849737cd1b3bc # v7
+        uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
         with:
           version: "latest"
           verb: call

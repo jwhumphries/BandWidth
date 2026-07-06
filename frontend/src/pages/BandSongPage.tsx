@@ -1,6 +1,9 @@
+import {FolderTree, Link2, Repeat} from 'lucide-react';
 import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
+import BandFolderPicker from '../components/bands/BandFolderPicker';
+import DatePicker from '../components/DatePicker';
 import ConfirmModal from '../components/songs/ConfirmModal';
 import {useBand} from '../hooks/bands';
 import {
@@ -41,6 +44,7 @@ export default function BandSongPage() {
   const [resUrl, setResUrl] = useState('');
   const [resLabel, setResLabel] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const [backfill, setBackfill] = useState('');
 
   useEffect(() => {
     if (song && !dirty) {
@@ -183,19 +187,44 @@ export default function BandSongPage() {
 
       <section className="card bg-base-100 shadow">
         <div className="card-body">
-          <h2 className="card-title">Rehearsals</h2>
+          <h2 className="card-title">
+            <Repeat className="text-primary size-5" />
+            Rehearsals
+          </h2>
           <p>
             {song.rehearsalCount} rehearsals
             {song.lastRehearsedAt && <> · last on {song.lastRehearsedAt}</>}
           </p>
           {canEdit && (
-            <div className="card-actions">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 className="btn btn-outline"
                 onClick={() => logRehearsal.mutate({date: localToday()})}
               >
                 Rehearsed today
               </button>
+              <DatePicker
+                value={backfill}
+                onChange={setBackfill}
+                aria-label="Backfill date"
+              />
+              <button
+                className="btn btn-ghost"
+                disabled={!backfill}
+                onClick={() =>
+                  logRehearsal.mutate(
+                    {date: backfill},
+                    {onSuccess: () => setBackfill('')},
+                  )
+                }
+              >
+                Log past day
+              </button>
+            </div>
+          )}
+          {logRehearsal.error && (
+            <div role="alert" className="alert alert-error">
+              {logRehearsal.error.message}
             </div>
           )}
         </div>
@@ -203,7 +232,10 @@ export default function BandSongPage() {
 
       <section className="card bg-base-100 shadow">
         <div className="card-body">
-          <h2 className="card-title">Band links</h2>
+          <h2 className="card-title">
+            <Link2 className="text-primary size-5" />
+            Band links
+          </h2>
           <ul className="flex flex-col gap-1">
             {song.resources.map(r => (
               <li key={r.id} className="flex items-center gap-2">
@@ -252,6 +284,16 @@ export default function BandSongPage() {
               </button>
             </form>
           )}
+        </div>
+      </section>
+
+      <section className="card bg-base-100 shadow">
+        <div className="card-body">
+          <h2 className="card-title">
+            <FolderTree className="text-primary size-5" />
+            Folders
+          </h2>
+          <BandFolderPicker bandId={bandId} songId={songId} canEdit={canEdit} />
         </div>
       </section>
 
