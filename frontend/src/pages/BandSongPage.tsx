@@ -3,6 +3,7 @@ import {useEffect, useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useParams} from 'react-router';
 import BandFolderPicker from '../components/bands/BandFolderPicker';
+import DatePicker from '../components/DatePicker';
 import ConfirmModal from '../components/songs/ConfirmModal';
 import {useBand} from '../hooks/bands';
 import {
@@ -202,12 +203,10 @@ export default function BandSongPage() {
               >
                 Rehearsed today
               </button>
-              <input
-                type="date"
-                className="input w-44"
-                aria-label="Backfill date"
+              <DatePicker
                 value={backfill}
-                onChange={e => setBackfill(e.target.value)}
+                onChange={setBackfill}
+                aria-label="Backfill date"
               />
               <button
                 className="btn btn-ghost"
