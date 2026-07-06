@@ -1,4 +1,4 @@
-import {Dumbbell, Sparkles} from 'lucide-react';
+import {Metronome, Sparkles} from 'lucide-react';
 import {useEffect, useMemo, useState} from 'react';
 import PracticeRow from '../components/practice/PracticeRow';
 import PracticeSourcePicker from '../components/practice/PracticeSourcePicker';
@@ -149,7 +149,7 @@ export default function PracticePage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display flex items-center gap-2 text-2xl font-bold tracking-tight">
-          <Dumbbell className="text-primary size-6" />
+          <Metronome className="text-primary size-6" />
           Practice
         </h1>
         <p className="text-base-content/55 text-sm">

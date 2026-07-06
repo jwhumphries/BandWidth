@@ -1,8 +1,8 @@
 import {
   AudioLines,
-  Dumbbell,
   LibraryBig,
   LogOut,
+  Metronome,
   Moon,
   Shield,
   Sun,
@@ -81,7 +81,7 @@ export default function Layout() {
             />
             <NavItem
               to="/practice"
-              icon={<Dumbbell className="size-4" />}
+              icon={<Metronome className="size-4" />}
               label="Practice"
             />
             <NavItem
