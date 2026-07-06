@@ -1,5 +1,4 @@
 import {
-  AudioLines,
   LibraryBig,
   LogOut,
   Metronome,
@@ -14,6 +13,7 @@ import {Link, NavLink, Outlet} from 'react-router';
 import {useLogout, useMe} from '../hooks/auth';
 import {useMyInvites} from '../hooks/invites';
 import {useTheme} from '../lib/theme';
+import Logo from './Logo';
 
 function NavItem({
   to,
@@ -66,7 +66,7 @@ export default function Layout() {
             aria-label="BandWidth home"
           >
             <span className="bg-primary text-primary-content grid size-8 place-items-center rounded-field shadow-sm transition-transform group-hover:scale-105">
-              <AudioLines className="size-5" strokeWidth={2.25} />
+              <Logo className="size-5" />
             </span>
             <span className="font-display text-xl font-bold tracking-tight">
               Band<span className="text-primary">Width</span>

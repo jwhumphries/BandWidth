@@ -1,8 +1,8 @@
-import {AudioLines} from 'lucide-react';
 import {useState} from 'react';
 import type {FormEvent} from 'react';
 import {Link, useNavigate, useSearchParams} from 'react-router';
 import {useAuthFeatures, useLogin} from '../hooks/auth';
+import Logo from '../components/Logo';
 import {safeRedirect} from '../lib/redirect';
 
 export default function LoginPage() {
@@ -44,7 +44,7 @@ export default function LoginPage() {
       <div className="hero-content w-full max-w-sm flex-col">
         <div className="flex flex-col items-center gap-3">
           <span className="bg-primary text-primary-content grid size-14 place-items-center rounded-box shadow-lg">
-            <AudioLines className="size-8" strokeWidth={2.25} />
+            <Logo className="size-8" />
           </span>
           <h1 className="font-display text-4xl font-bold tracking-tight">
             Band<span className="text-primary">Width</span>
