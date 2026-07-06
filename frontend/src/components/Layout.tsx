@@ -56,7 +56,7 @@ export default function Layout() {
   const {theme, toggle} = useTheme();
 
   return (
-    <div className="bg-base-200 text-base-content min-h-screen">
+    <div className="bg-base-200 text-base-content flex-1">
       <header className="border-base-300/70 bg-base-100/80 sticky top-0 z-30 border-b backdrop-blur-lg">
         <nav className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
           <Link
