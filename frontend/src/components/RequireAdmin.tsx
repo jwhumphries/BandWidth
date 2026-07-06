@@ -5,7 +5,7 @@ export default function RequireAdmin() {
   const {data, isPending} = useMe();
   if (isPending) {
     return (
-      <div className="flex justify-center py-12">
+      <div className="flex flex-1 items-center justify-center">
         <span
           className="loading loading-spinner loading-lg"
           aria-label="Loading"

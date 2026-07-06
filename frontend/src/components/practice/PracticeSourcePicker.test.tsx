@@ -44,6 +44,9 @@ describe('PracticeSourcePicker', () => {
     expect(
       await screen.findByRole('option', {name: 'All The Cure songs'}),
     ).toBeInTheDocument();
+
+    // Band folder options load lazily once the select is opened/focused.
+    await userEvent.click(screen.getByRole('combobox'));
     expect(
       await screen.findByRole('option', {name: 'Setlist'}),
     ).toBeInTheDocument();

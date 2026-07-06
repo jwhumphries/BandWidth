@@ -9,6 +9,7 @@ export default function PracticeRow({
   done,
   actionLabel,
   canAct,
+  disabledReason,
   onToggle,
 }: {
   song: SongListItem;
@@ -16,6 +17,7 @@ export default function PracticeRow({
   done: boolean;
   actionLabel: string;
   canAct: boolean;
+  disabledReason?: string;
   onToggle: () => void;
 }) {
   return (
@@ -48,7 +50,7 @@ export default function PracticeRow({
           className={`btn btn-sm gap-1.5 ${done ? 'btn-ghost' : 'btn-primary'}`}
           onClick={onToggle}
           disabled={!canAct}
-          title={canAct ? undefined : 'Viewers cannot log band rehearsals'}
+          title={canAct ? undefined : disabledReason}
         >
           {done ? (
             <RotateCcw className="size-4" />

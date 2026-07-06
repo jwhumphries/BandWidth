@@ -81,7 +81,7 @@ from `useFolders()`; band folder song ids from `useBandFolders(bandId)`.
 A pure function in `frontend/src/lib/practice.ts`, unit-tested with an
 injectable RNG:
 
-```
+```ts
 suggest(candidates: SongListItem[], count: number, rng): number[]
 ```
 

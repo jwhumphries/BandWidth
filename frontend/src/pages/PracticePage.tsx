@@ -30,15 +30,19 @@ import type {SongListItem} from '../lib/types';
 function useBandData(parsed: ParsedSource, mode: PracticeMode) {
   const bandId =
     parsed.kind === 'band' || parsed.kind === 'bandfolder' ? parsed.bandId : 0;
-  const {data: bandSongs = []} = useBandSongs(
+  const songsEnabled = bandId > 0 && mode === 'band';
+  const foldersEnabled = parsed.kind === 'bandfolder' && bandId > 0;
+  const {data: bandSongs = [], isPending: songsPending} = useBandSongs(
     bandId,
-    bandId > 0 && mode === 'band',
+    songsEnabled,
   );
-  const {data: bandFolders = []} = useBandFolders(
+  const {data: bandFolders = [], isPending: foldersPending} = useBandFolders(
     bandId,
-    parsed.kind === 'bandfolder' && bandId > 0,
+    foldersEnabled,
   );
-  return {bandSongs, bandFolders};
+  const isLoading =
+    (songsEnabled && songsPending) || (foldersEnabled && foldersPending);
+  return {bandSongs, bandFolders, isLoading};
 }
 
 export default function PracticePage() {
@@ -65,7 +69,10 @@ export default function PracticePage() {
   const controlBand = useBandData(controlParsed, controlMode);
 
   const gen = state.generated;
-  const genParsed: ParsedSource = gen ? parseSource(gen.source) : {kind: 'all'};
+  const genParsed: ParsedSource = useMemo(
+    () => (gen ? parseSource(gen.source) : {kind: 'all'}),
+    [gen?.source],
+  );
   const genMode: PracticeMode = gen?.mode ?? 'personal';
   const genBand = useBandData(genParsed, genMode);
   const genBandId =
@@ -81,6 +88,7 @@ export default function PracticePage() {
   const today = localToday();
 
   const generate = () => {
+    if (controlBand.isLoading) return;
     const candidates = resolveCandidates(controlParsed, controlMode, {
       songs,
       folders,
@@ -207,9 +215,13 @@ export default function PracticePage() {
           </select>
         </label>
 
-        <button className="btn btn-primary gap-1.5" onClick={generate}>
+        <button
+          className="btn btn-primary gap-1.5"
+          onClick={generate}
+          disabled={controlBand.isLoading}
+        >
           <Sparkles className="size-4" />
-          Suggest Songs
+          {controlBand.isLoading ? 'Loading…' : 'Suggest Songs'}
         </button>
       </div>
 
@@ -237,6 +249,7 @@ export default function PracticePage() {
                 done={done}
                 actionLabel={actionLabel}
                 canAct={canAct}
+                disabledReason="Viewers cannot log band rehearsals"
                 onToggle={() =>
                   done ? setPendingUndo(song.id) : logFor(song.id)
                 }
