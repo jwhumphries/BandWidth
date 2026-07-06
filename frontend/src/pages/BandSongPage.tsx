@@ -43,6 +43,7 @@ export default function BandSongPage() {
   const [resUrl, setResUrl] = useState('');
   const [resLabel, setResLabel] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const [backfill, setBackfill] = useState('');
 
   useEffect(() => {
     if (song && !dirty) {
@@ -194,13 +195,37 @@ export default function BandSongPage() {
             {song.lastRehearsedAt && <> · last on {song.lastRehearsedAt}</>}
           </p>
           {canEdit && (
-            <div className="card-actions">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 className="btn btn-outline"
                 onClick={() => logRehearsal.mutate({date: localToday()})}
               >
                 Rehearsed today
               </button>
+              <input
+                type="date"
+                className="input w-44"
+                aria-label="Backfill date"
+                value={backfill}
+                onChange={e => setBackfill(e.target.value)}
+              />
+              <button
+                className="btn btn-ghost"
+                disabled={!backfill}
+                onClick={() =>
+                  logRehearsal.mutate(
+                    {date: backfill},
+                    {onSuccess: () => setBackfill('')},
+                  )
+                }
+              >
+                Log past day
+              </button>
+            </div>
+          )}
+          {logRehearsal.error && (
+            <div role="alert" className="alert alert-error">
+              {logRehearsal.error.message}
             </div>
           )}
         </div>

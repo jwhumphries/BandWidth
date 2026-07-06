@@ -134,4 +134,29 @@ describe('BandSongPage', () => {
       ).toBe(true);
     });
   });
+
+  it('logs a rehearsal for a backfilled past date', async () => {
+    stubFetch('admin');
+    renderPage();
+    await screen.findByDisplayValue('Wonderwall');
+
+    const logPastDay = screen.getByRole('button', {name: /log past day/i});
+    expect(logPastDay).toBeDisabled();
+
+    await userEvent.type(screen.getByLabelText(/backfill date/i), '2026-05-01');
+    expect(logPastDay).toBeEnabled();
+    await userEvent.click(logPastDay);
+
+    await waitFor(() => {
+      const calls = vi.mocked(fetch).mock.calls;
+      expect(
+        calls.some(
+          ([input, init]) =>
+            String(input).includes('/bands/3/songs/1/rehearsal') &&
+            init?.method === 'PUT' &&
+            String(init.body).includes('2026-05-01'),
+        ),
+      ).toBe(true);
+    });
+  });
 });
