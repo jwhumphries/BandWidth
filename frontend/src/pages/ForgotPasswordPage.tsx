@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="hero bg-base-200 min-h-screen">
+    <main className="hero bg-base-200 flex-1">
       <div className="hero-content w-full max-w-sm flex-col">
         <h1 className="text-4xl font-bold">Reset password</h1>
         {request.isSuccess ? (
