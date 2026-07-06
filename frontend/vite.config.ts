@@ -14,9 +14,6 @@ export default defineConfig({
       // silently swaps the SW and never triggers onNeedRefresh, leaving the
       // toast dead. This honors the design doc's intent (a reload toast).
       registerType: 'prompt',
-      // Icons are deferred until artwork lands; the manifest is otherwise
-      // complete. Add 192/512 maskable PNG entries here to make the app
-      // installable (see Task 7).
       manifest: {
         name: 'BandWidth',
         short_name: 'BandWidth',
@@ -25,7 +22,18 @@ export default defineConfig({
         background_color: '#0e1116',
         display: 'standalone',
         start_url: '/',
-        icons: [],
+        icons: [
+          {
+            src: 'android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,woff2}'],
