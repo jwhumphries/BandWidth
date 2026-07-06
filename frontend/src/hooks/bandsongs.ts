@@ -12,10 +12,11 @@ interface RehearsalStats {
   rehearsalCount: number;
 }
 
-export function useBandSongs(bandId: number) {
+export function useBandSongs(bandId: number, enabled = true) {
   return useQuery<SongListItem[], ApiError>({
     queryKey: ['bands', bandId, 'songs'],
     queryFn: () => api.get<SongListItem[]>(`/api/bands/${bandId}/songs`),
+    enabled,
   });
 }
 

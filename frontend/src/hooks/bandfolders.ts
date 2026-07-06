@@ -2,10 +2,11 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {api, ApiError} from '../lib/api';
 import type {Folder} from '../lib/types';
 
-export function useBandFolders(bandId: number) {
+export function useBandFolders(bandId: number, enabled = true) {
   return useQuery<Folder[], ApiError>({
     queryKey: ['bands', bandId, 'folders'],
     queryFn: () => api.get<Folder[]>(`/api/bands/${bandId}/folders`),
+    enabled,
   });
 }
 
