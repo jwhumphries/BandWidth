@@ -12,25 +12,53 @@ function json(status: number, body: unknown) {
 }
 
 const songs = [
-  {id: 1, title: 'Alpha', artist: 'A', status: 'learning', lastPracticedAt: '', practiceCount: 0},
-  {id: 2, title: 'Bravo', artist: 'B', status: 'learned', lastPracticedAt: '2026-01-01', practiceCount: 3},
-  {id: 3, title: 'Charlie', artist: 'C', status: 'nailed', lastPracticedAt: today, practiceCount: 5},
+  {
+    id: 1,
+    title: 'Alpha',
+    artist: 'A',
+    status: 'learning',
+    lastPracticedAt: '',
+    practiceCount: 0,
+  },
+  {
+    id: 2,
+    title: 'Bravo',
+    artist: 'B',
+    status: 'learned',
+    lastPracticedAt: '2026-01-01',
+    practiceCount: 3,
+  },
+  {
+    id: 3,
+    title: 'Charlie',
+    artist: 'C',
+    status: 'nailed',
+    lastPracticedAt: today,
+    practiceCount: 5,
+  },
 ];
 
 function stubFetch() {
   vi.stubGlobal(
     'fetch',
-    vi.fn().mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      if (url.includes('/api/songs/') && init?.method === 'PUT') {
-        return Promise.resolve(json(200, {lastPracticedAt: today, practiceCount: 1}));
-      }
-      if (url.includes('/api/songs/') && init?.method === 'DELETE') {
-        return Promise.resolve(json(200, {lastPracticedAt: '', practiceCount: 0}));
-      }
-      if (url.endsWith('/api/songs')) return Promise.resolve(json(200, songs));
-      return Promise.resolve(json(200, [])); // /api/folders, /api/bands
-    }),
+    vi
+      .fn()
+      .mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        if (url.includes('/api/songs/') && init?.method === 'PUT') {
+          return Promise.resolve(
+            json(200, {lastPracticedAt: today, practiceCount: 1}),
+          );
+        }
+        if (url.includes('/api/songs/') && init?.method === 'DELETE') {
+          return Promise.resolve(
+            json(200, {lastPracticedAt: '', practiceCount: 0}),
+          );
+        }
+        if (url.endsWith('/api/songs'))
+          return Promise.resolve(json(200, songs));
+        return Promise.resolve(json(200, [])); // /api/folders, /api/bands
+      }),
   );
 }
 
@@ -50,8 +78,12 @@ describe('PracticePage', () => {
 
     // Never-practiced Alpha first, then Bravo; Charlie (today) shows as done.
     expect(await screen.findByText('Alpha')).toBeInTheDocument();
-    expect(within(rowFor('Alpha')).getByRole('button', {name: /practiced/i})).toBeInTheDocument();
-    expect(within(rowFor('Charlie')).getByRole('button', {name: /undo/i})).toBeInTheDocument();
+    expect(
+      within(rowFor('Alpha')).getByRole('button', {name: /practiced/i}),
+    ).toBeInTheDocument();
+    expect(
+      within(rowFor('Charlie')).getByRole('button', {name: /undo/i}),
+    ).toBeInTheDocument();
   });
 
   it('logs practice with today when a suggested song is tapped', async () => {
@@ -59,7 +91,9 @@ describe('PracticePage', () => {
     await userEvent.click(screen.getByRole('button', {name: /suggest songs/i}));
     await screen.findByText('Alpha');
 
-    await userEvent.click(within(rowFor('Alpha')).getByRole('button', {name: /practiced/i}));
+    await userEvent.click(
+      within(rowFor('Alpha')).getByRole('button', {name: /practiced/i}),
+    );
     await waitFor(() => {
       const calls = vi.mocked(fetch).mock.calls;
       expect(
@@ -78,7 +112,9 @@ describe('PracticePage', () => {
     await userEvent.click(screen.getByRole('button', {name: /suggest songs/i}));
     await screen.findByText('Charlie');
 
-    await userEvent.click(within(rowFor('Charlie')).getByRole('button', {name: /undo/i}));
+    await userEvent.click(
+      within(rowFor('Charlie')).getByRole('button', {name: /undo/i}),
+    );
     // Confirm modal opens; confirm it.
     await userEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', {name: /undo/i}),

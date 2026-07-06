@@ -10,7 +10,11 @@ import {
   suggest,
 } from './practice';
 
-function song(id: number, lastPracticedAt: string, bandId?: number): SongListItem {
+function song(
+  id: number,
+  lastPracticedAt: string,
+  bandId?: number,
+): SongListItem {
   return {
     id,
     title: `Song ${id}`,
@@ -98,9 +102,9 @@ describe('resolveCandidates', () => {
   };
 
   it('all -> whole personal library', () => {
-    expect(resolveCandidates({kind: 'all'}, 'personal', data).map(s => s.id)).toEqual([
-      1, 2, 3,
-    ]);
+    expect(
+      resolveCandidates({kind: 'all'}, 'personal', data).map(s => s.id),
+    ).toEqual([1, 2, 3]);
   });
 
   it('folder -> personal songs in the folder', () => {
@@ -124,12 +128,18 @@ describe('resolveCandidates', () => {
 
   it('bandfolder honors mode for the ranking source', () => {
     expect(
-      resolveCandidates({kind: 'bandfolder', bandId: 3, folderId: 20}, 'personal', data)
-        .map(s => s.id),
+      resolveCandidates(
+        {kind: 'bandfolder', bandId: 3, folderId: 20},
+        'personal',
+        data,
+      ).map(s => s.id),
     ).toEqual([3]);
     expect(
-      resolveCandidates({kind: 'bandfolder', bandId: 3, folderId: 20}, 'band', data)[0]
-        .lastPracticedAt,
+      resolveCandidates(
+        {kind: 'bandfolder', bandId: 3, folderId: 20},
+        'band',
+        data,
+      )[0].lastPracticedAt,
     ).toBe('2026-06-02');
   });
 });

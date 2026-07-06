@@ -47,7 +47,11 @@ export function parseSource(value: string): ParsedSource {
     return {kind: 'band', bandId: Number(parts[1])};
   }
   if (parts[0] === 'bandfolder' && parts.length === 3) {
-    return {kind: 'bandfolder', bandId: Number(parts[1]), folderId: Number(parts[2])};
+    return {
+      kind: 'bandfolder',
+      bandId: Number(parts[1]),
+      folderId: Number(parts[2]),
+    };
   }
   return {kind: 'all'};
 }
@@ -63,7 +67,10 @@ export function effectiveMode(value: string, mode: PracticeMode): PracticeMode {
   return isBandScoped(value) ? mode : 'personal';
 }
 
-function byIds(songs: SongListItem[], ids: number[] | undefined): SongListItem[] {
+function byIds(
+  songs: SongListItem[],
+  ids: number[] | undefined,
+): SongListItem[] {
   if (!ids) return [];
   const wanted = new Set(ids);
   return songs.filter(s => wanted.has(s.id));
@@ -90,7 +97,9 @@ export function resolveCandidates(
         : data.songs.filter(s => s.bandId === parsed.bandId);
     case 'bandfolder': {
       const ids = data.bandFolders.find(f => f.id === parsed.folderId)?.songIds;
-      return mode === 'band' ? byIds(data.bandSongs, ids) : byIds(data.songs, ids);
+      return mode === 'band'
+        ? byIds(data.bandSongs, ids)
+        : byIds(data.songs, ids);
     }
   }
 }

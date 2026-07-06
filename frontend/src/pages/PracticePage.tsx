@@ -30,7 +30,10 @@ import type {SongListItem} from '../lib/types';
 function useBandData(parsed: ParsedSource, mode: PracticeMode) {
   const bandId =
     parsed.kind === 'band' || parsed.kind === 'bandfolder' ? parsed.bandId : 0;
-  const {data: bandSongs = []} = useBandSongs(bandId, bandId > 0 && mode === 'band');
+  const {data: bandSongs = []} = useBandSongs(
+    bandId,
+    bandId > 0 && mode === 'band',
+  );
   const {data: bandFolders = []} = useBandFolders(
     bandId,
     parsed.kind === 'bandfolder' && bandId > 0,
@@ -85,7 +88,10 @@ export default function PracticePage() {
       bandFolders: controlBand.bandFolders,
     });
     const list = suggest(candidates, state.count);
-    setState(s => ({...s, generated: {source: s.source, mode: controlMode, list}}));
+    setState(s => ({
+      ...s,
+      generated: {source: s.source, mode: controlMode, list},
+    }));
   };
 
   // Rebuild rows from live data so titles/dates/done-state stay fresh; drop
@@ -102,7 +108,15 @@ export default function PracticePage() {
     return gen.list
       .map(id => byId.get(id))
       .filter((s): s is SongListItem => s !== undefined);
-  }, [gen, genParsed, genMode, songs, folders, genBand.bandSongs, genBand.bandFolders]);
+  }, [
+    gen,
+    genParsed,
+    genMode,
+    songs,
+    folders,
+    genBand.bandSongs,
+    genBand.bandFolders,
+  ]);
 
   const genBandRole =
     genBandId > 0 ? bands.find(b => b.id === genBandId)?.role : undefined;
@@ -145,7 +159,9 @@ export default function PracticePage() {
 
       <div className="border-base-300/60 bg-base-100 flex flex-wrap items-end gap-3 rounded-box border p-4">
         <label className="flex flex-col gap-1">
-          <span className="text-base-content/60 text-xs font-medium">Source</span>
+          <span className="text-base-content/60 text-xs font-medium">
+            Source
+          </span>
           <PracticeSourcePicker
             value={state.source}
             onChange={source => setState(s => ({...s, source}))}
@@ -172,12 +188,16 @@ export default function PracticePage() {
         )}
 
         <label className="flex flex-col gap-1">
-          <span className="text-base-content/60 text-xs font-medium">Songs</span>
+          <span className="text-base-content/60 text-xs font-medium">
+            Songs
+          </span>
           <select
             className="select"
             aria-label="Number of songs"
             value={state.count}
-            onChange={e => setState(s => ({...s, count: Number(e.target.value)}))}
+            onChange={e =>
+              setState(s => ({...s, count: Number(e.target.value)}))
+            }
           >
             {Array.from({length: 10}, (_, i) => i + 1).map(n => (
               <option key={n} value={n}>
@@ -217,7 +237,9 @@ export default function PracticePage() {
                 done={done}
                 actionLabel={actionLabel}
                 canAct={canAct}
-                onToggle={() => (done ? setPendingUndo(song.id) : logFor(song.id))}
+                onToggle={() =>
+                  done ? setPendingUndo(song.id) : logFor(song.id)
+                }
               />
             );
           })}
