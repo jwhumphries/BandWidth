@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/alexedwards/argon2id v1.0.0
-	github.com/labstack/echo/v5 v5.2.1
+	github.com/labstack/echo/v5 v5.3.0
 	github.com/ncruces/go-sqlite3/gormlite v0.34.0
 	github.com/pquerna/otp v1.5.0
 	github.com/spf13/cobra v1.10.2
@@ -34,5 +34,5 @@ require (
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 )
