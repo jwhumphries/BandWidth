@@ -28,7 +28,7 @@
         "@types/react": "19.2.17",
         "@types/react-dom": "19.2.3",
         "@vitejs/plugin-react": "6.0.3",
-        "daisyui": "5.6.17",
+        "daisyui": "5.7.1",
         "eslint": "10.7.0",
         "eslint-config-prettier": "10.1.8",
         "eslint-plugin-prettier": "5.5.6",
@@ -638,7 +638,7 @@
 
     "csstype": ["csstype@3.2.3", "", {}, "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="],
 
-    "daisyui": ["daisyui@5.6.17", "", {}, "sha512-e/+8lJc2/GiMrnm6bVL+0K3pYE2mUP4DY/IFUcOCQdcocvRkDsmXGIIaC87JMedJJSKXVCuFpOVSZqMwaRcIGg=="],
+    "daisyui": ["daisyui@5.7.1", "", {}, "sha512-E94FQtecKyq9HKI7xYX1E0XxFIUwOkr6PCpbRUvOJdd15P/oPm6dmhJKwH6PztKHYk1wcANfldkAVaAkYdqVsA=="],
 
     "data-urls": ["data-urls@7.0.0", "", { "dependencies": { "whatwg-mimetype": "^5.0.0", "whatwg-url": "^16.0.0" } }, "sha512-23XHcCF+coGYevirZceTVD7NdJOqVn+49IHyxgszm+JIiHLoB2TkmPtsYkNWT1pvRSGkc35L6NHs0yHkN2SumA=="],
 
