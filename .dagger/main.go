@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	goImage     = "golang:1.26-alpine"
+	goImage     = "golang:1.27-alpine"
 	bunImage    = "oven/bun:1-alpine"
-	lintImage   = "golangci/golangci-lint:v2.9.0-alpine"
+	lintImage   = "golangci/golangci-lint:v2.13.1-alpine"
 	alpineImage = "alpine:3.23"
 )
 
