@@ -29,6 +29,7 @@ function jsonResponse(status: number, body: unknown) {
 
 describe('HomePage library', () => {
   beforeEach(() => {
+    sessionStorage.clear();
     vi.stubGlobal(
       'fetch',
       vi
@@ -91,6 +92,67 @@ describe('HomePage library', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', {name: /undo/i})).toBeInTheDocument(),
     );
+  });
+
+  it('orders a folder alphabetically with no reorder handles', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/folders')) {
+          return Promise.resolve(
+            jsonResponse(200, [
+              {id: 4, name: 'Setlist', position: 1, songIds: [1, 2]},
+            ]),
+          );
+        }
+        if (url.includes('/api/songs')) {
+          return Promise.resolve(jsonResponse(200, songs));
+        }
+        return Promise.resolve(jsonResponse(200, {}));
+      }),
+    );
+
+    renderWithProviders(<HomePage />);
+    await userEvent.click(await screen.findByRole('button', {name: 'Setlist'}));
+
+    const links = await screen.findAllByRole('link');
+    expect(links.map(l => l.textContent)).toEqual([
+      'CreepRadiohead',
+      'WonderwallOasis',
+    ]);
+    expect(
+      screen.queryByRole('button', {name: /reorder wonderwall/i}),
+    ).not.toBeInTheDocument();
+  });
+
+  it('restores the folder selected before visiting a song', async () => {
+    sessionStorage.setItem('bandwidth-folder:personal', '4');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('/api/folders')) {
+          return Promise.resolve(
+            jsonResponse(200, [
+              {id: 4, name: 'Setlist', position: 1, songIds: [2]},
+            ]),
+          );
+        }
+        if (url.includes('/api/songs')) {
+          return Promise.resolve(jsonResponse(200, songs));
+        }
+        return Promise.resolve(jsonResponse(200, {}));
+      }),
+    );
+
+    renderWithProviders(<HomePage />);
+
+    expect(
+      await screen.findByRole('heading', {name: 'Setlist'}),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Creep')).toBeInTheDocument();
+    expect(screen.queryByText('Wonderwall')).not.toBeInTheDocument();
   });
 
   it('adds a song through the modal', async () => {

@@ -26,7 +26,7 @@ describe('BandFolderSidebar', () => {
     renderWithProviders(
       <BandFolderSidebar
         bandId={3}
-        canEdit={true}
+        canEdit
         selectedId={null}
         onSelect={() => {}}
       />,

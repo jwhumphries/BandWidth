@@ -1,5 +1,4 @@
 import {ArrowLeft} from 'lucide-react';
-import {useEffect, useState} from 'react';
 import {Link, useParams} from 'react-router';
 import BandFolderSidebar from '../components/bands/BandFolderSidebar';
 import BandSettings from '../components/bands/BandSettings';
@@ -7,17 +6,16 @@ import BandSongList from '../components/bands/BandSongList';
 import InviteManager from '../components/bands/InviteManager';
 import MemberList from '../components/bands/MemberList';
 import {useBand} from '../hooks/bands';
+import {useBandFolders} from '../hooks/bandfolders';
+import {useFolderSelection} from '../lib/folderSelection';
 
 export default function BandPage() {
   const {id: idParam} = useParams();
   const id = Number(idParam);
   const {data: band, isPending, isError, error, refetch} = useBand(id);
-  const [folderId, setFolderId] = useState<number | null>(null);
-
-  // Switching bands must clear any folder selected in the previous band.
-  useEffect(() => {
-    setFolderId(null);
-  }, [id]);
+  const {data: folders} = useBandFolders(id);
+  // Scoped per band, so switching bands does not carry a folder across.
+  const [folderId, setFolderId] = useFolderSelection(`band:${id}`, folders);
 
   if (isPending) {
     return (
