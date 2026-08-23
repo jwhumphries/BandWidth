@@ -2,12 +2,13 @@ import Fuse from 'fuse.js';
 import {Music, Plus, Search} from 'lucide-react';
 import {useEffect, useMemo, useState} from 'react';
 import FolderSidebar from '../components/folders/FolderSidebar';
-import SortableSongList from '../components/folders/SortableSongList';
 import AddSongModal from '../components/songs/AddSongModal';
 import LibraryProgress from '../components/songs/LibraryProgress';
 import SongRow from '../components/songs/SongRow';
-import {useFolders, useSetFolderEntries} from '../hooks/folders';
+import {useFolders} from '../hooks/folders';
 import {useLogPractice, useSongs, useUndoPractice} from '../hooks/songs';
+import {useFolderSelection} from '../lib/folderSelection';
+import {sortSongsByTitle} from '../lib/sort';
 
 interface UndoState {
   songId: number;
@@ -17,14 +18,13 @@ interface UndoState {
 
 export default function HomePage() {
   const {data: songs = []} = useSongs();
-  const {data: folders = []} = useFolders();
+  const {data: folders} = useFolders();
   const logPractice = useLogPractice();
   const undoPractice = useUndoPractice();
-  const setEntries = useSetFolderEntries();
   const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
   const [undo, setUndo] = useState<UndoState | null>(null);
-  const [folderId, setFolderId] = useState<number | null>(null);
+  const [folderId, setFolderId] = useFolderSelection('personal', folders);
   const [practiceError, setPracticeError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -39,15 +39,13 @@ export default function HomePage() {
     return () => clearTimeout(timer);
   }, [practiceError]);
 
-  const selectedFolder = folders.find(f => f.id === folderId) ?? null;
+  const selectedFolder = folders?.find(f => f.id === folderId) ?? null;
 
-  // Folder view shows the folder's songs in folder order.
+  // Folder membership carries no order of its own — every list is alphabetical.
   const folderSongs = useMemo(() => {
-    if (!selectedFolder) return songs;
-    const byID = new Map(songs.map(s => [s.id, s]));
-    return selectedFolder.songIds
-      .map(id => byID.get(id))
-      .filter((s): s is NonNullable<typeof s> => s !== undefined);
+    if (!selectedFolder) return sortSongsByTitle(songs);
+    const members = new Set(selectedFolder.songIds);
+    return sortSongsByTitle(songs.filter(s => members.has(s.id)));
   }, [songs, selectedFolder]);
 
   const fuse = useMemo(
@@ -129,14 +127,6 @@ export default function HomePage() {
               <p>No songs in this folder yet.</p>
             )}
           </div>
-        ) : selectedFolder && !searching ? (
-          <SortableSongList
-            songs={visible}
-            onPracticed={practiced}
-            onReorder={songIds =>
-              setEntries.mutate({id: selectedFolder.id, songIds})
-            }
-          />
         ) : (
           <ul className="flex flex-col gap-2">
             {visible.map(song => (

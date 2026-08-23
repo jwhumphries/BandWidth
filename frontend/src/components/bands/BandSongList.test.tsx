@@ -53,7 +53,7 @@ describe('BandSongList', () => {
   });
 
   it('lets editors add a band song', async () => {
-    renderWithProviders(<BandSongList bandId={3} canEdit={true} />);
+    renderWithProviders(<BandSongList bandId={3} canEdit />);
     await screen.findByRole('link', {name: /wonderwall/i});
     await userEvent.click(screen.getByRole('button', {name: /add song/i}));
     await userEvent.type(screen.getByLabelText(/title/i), 'Creep');
@@ -72,7 +72,7 @@ describe('BandSongList', () => {
   });
 
   it('lets editors log a rehearsal with undo', async () => {
-    renderWithProviders(<BandSongList bandId={3} canEdit={true} />);
+    renderWithProviders(<BandSongList bandId={3} canEdit />);
     await screen.findByRole('link', {name: /wonderwall/i});
     await userEvent.click(screen.getByRole('button', {name: /rehearsed/i}));
     await waitFor(() => {
@@ -104,5 +104,37 @@ describe('BandSongList', () => {
     expect(
       screen.queryByRole('button', {name: /rehearsed/i}),
     ).not.toBeInTheDocument();
+  });
+
+  it('orders a folder alphabetically, not by when songs were added', async () => {
+    const folderSongs = [
+      {...songs[0], id: 1, title: 'Zebra', artist: 'Cure'},
+      {...songs[0], id: 2, title: 'Aqualung', artist: 'Jethro Tull'},
+      {...songs[0], id: 3, title: 'Money', artist: 'Pink Floyd'},
+    ];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((input: RequestInfo | URL) => {
+        if (String(input).endsWith('/folders')) {
+          return Promise.resolve(
+            jsonResponse(200, [
+              {id: 5, name: 'Set 1', position: 1, songIds: [1, 3, 2]},
+            ]),
+          );
+        }
+        return Promise.resolve(jsonResponse(200, folderSongs));
+      }),
+    );
+
+    renderWithProviders(
+      <BandSongList bandId={3} canEdit={false} folderId={5} />,
+    );
+
+    const links = await screen.findAllByRole('link');
+    expect(links.map(l => l.textContent)).toEqual([
+      'AqualungJethro Tull',
+      'MoneyPink Floyd',
+      'ZebraCure',
+    ]);
   });
 });
