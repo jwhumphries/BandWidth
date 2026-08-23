@@ -46,10 +46,14 @@ export function useFolderSelection(
     read(scope),
   );
 
-  // A new scope is a different library with its own remembered folder.
-  useEffect(() => {
+  // A new scope is a different library with its own remembered folder. Resetting
+  // during render rather than in an effect keeps the validation below from
+  // seeing the previous library's folder and erasing this one's stored id.
+  const [prevScope, setPrevScope] = useState(scope);
+  if (prevScope !== scope) {
+    setPrevScope(scope);
     setSelectedId(read(scope));
-  }, [scope]);
+  }
 
   useEffect(() => {
     if (selectedId === null || !folders) return;

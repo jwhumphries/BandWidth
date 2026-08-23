@@ -21,6 +21,8 @@ export default function FolderSidebar({
   const deleteFolder = useDeleteFolder();
   const reorderFolders = useReorderFolders();
 
+  // Deleting the selected folder falls back to all songs on its own: the folder
+  // list refetches without it and useFolderSelection drops the stale id.
   return (
     <FolderSidebarView
       folders={folders}
@@ -30,13 +32,7 @@ export default function FolderSidebar({
       onSelect={onSelect}
       onCreate={name => createFolder.mutate({name})}
       onRename={(id, name) => renameFolder.mutate({id, name})}
-      onDelete={folder =>
-        deleteFolder.mutate(folder.id, {
-          onSuccess: () => {
-            if (selectedId === folder.id) onSelect(null);
-          },
-        })
-      }
+      onDelete={folder => deleteFolder.mutate(folder.id)}
       onReorder={ids => reorderFolders.mutate(ids)}
     />
   );

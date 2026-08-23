@@ -47,6 +47,23 @@ describe('useFolderSelection', () => {
     expect(result.current[0]).toBe(1);
   });
 
+  it('keeps the destination folder when scopes share no folder ids', () => {
+    sessionStorage.setItem('bandwidth-folder:band:1', '1');
+    sessionStorage.setItem('bandwidth-folder:band:2', '7');
+    const otherFolders = [folder(7, 'Encores'), folder(8, 'Retired')];
+    const {result, rerender} = renderHook(
+      ({scope, list}) => useFolderSelection(scope, list),
+      {initialProps: {scope: 'band:1', list: folders}},
+    );
+    expect(result.current[0]).toBe(1);
+
+    // Both change together, the way switching bands swaps folders with the id.
+    rerender({scope: 'band:2', list: otherFolders});
+
+    expect(result.current[0]).toBe(7);
+    expect(sessionStorage.getItem('bandwidth-folder:band:2')).toBe('7');
+  });
+
   it('falls back to all songs when the stored folder no longer exists', () => {
     sessionStorage.setItem('bandwidth-folder:band:1', '99');
     const {result} = renderHook(() => useFolderSelection('band:1', folders));
