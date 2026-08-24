@@ -1,15 +1,15 @@
 module github.com/jwhumphries/bandwidth
 
-go 1.26
+go 1.27
 
 require (
 	github.com/alexedwards/argon2id v1.0.0
-	github.com/labstack/echo/v5 v5.2.1
+	github.com/labstack/echo/v5 v5.3.1
 	github.com/ncruces/go-sqlite3/gormlite v0.34.0
 	github.com/pquerna/otp v1.5.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/wneessen/go-mail v0.8.0
+	github.com/wneessen/go-mail v0.8.1
 	gorm.io/gorm v1.31.2
 )
 
@@ -31,8 +31,8 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
-	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/crypto v0.54.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 )

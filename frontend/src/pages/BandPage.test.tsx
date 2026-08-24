@@ -56,8 +56,54 @@ function renderBandPage(myRole = 'admin') {
   );
 }
 
+const bandSongs = [
+  {
+    id: 1,
+    title: 'Aqualung',
+    artist: 'Jethro Tull',
+    status: 'learning',
+    lastPracticedAt: '',
+    practiceCount: 0,
+  },
+  {
+    id: 2,
+    title: 'Money',
+    artist: 'Pink Floyd',
+    status: 'learned',
+    lastPracticedAt: '',
+    practiceCount: 0,
+  },
+];
+
+const bandFolders = [{id: 7, name: 'Set 1', position: 1, songIds: [2]}];
+
+function renderBandPageWithFolders() {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/invites'))
+        return Promise.resolve(jsonResponse(200, []));
+      if (url.includes('/songs'))
+        return Promise.resolve(jsonResponse(200, bandSongs));
+      if (url.includes('/folders'))
+        return Promise.resolve(jsonResponse(200, bandFolders));
+      return Promise.resolve(jsonResponse(200, detail));
+    }),
+  );
+  return renderWithProviders(
+    <Routes>
+      <Route path="/bands/:id" element={<BandPage />} />
+    </Routes>,
+    {route: '/bands/1'},
+  );
+}
+
 describe('BandPage', () => {
-  beforeEach(() => vi.unstubAllGlobals());
+  beforeEach(() => {
+    vi.unstubAllGlobals();
+    sessionStorage.clear();
+  });
 
   it('shows the roster with roles', async () => {
     renderBandPage();
@@ -89,6 +135,37 @@ describe('BandPage', () => {
     );
     await waitFor(() =>
       expect(screen.getByText(/\/join\/TOK123/)).toBeInTheDocument(),
+    );
+  });
+
+  it('restores the folder selected before visiting a song', async () => {
+    sessionStorage.setItem('bandwidth-folder:band:1', '7');
+    renderBandPageWithFolders();
+
+    // Only the stored folder's songs — not the whole band library.
+    expect(await screen.findByText('Money')).toBeInTheDocument();
+    expect(screen.queryByText('Aqualung')).not.toBeInTheDocument();
+  });
+
+  it('remembers the folder a member selects', async () => {
+    renderBandPageWithFolders();
+    await screen.findByText('Aqualung');
+
+    await userEvent.click(screen.getByRole('button', {name: 'Set 1'}));
+
+    await waitFor(() =>
+      expect(sessionStorage.getItem('bandwidth-folder:band:1')).toBe('7'),
+    );
+  });
+
+  it('ignores a stored folder that no longer exists', async () => {
+    sessionStorage.setItem('bandwidth-folder:band:1', '999');
+    renderBandPageWithFolders();
+
+    expect(await screen.findByText('Aqualung')).toBeInTheDocument();
+    expect(screen.getByText('Money')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(sessionStorage.getItem('bandwidth-folder:band:1')).toBeNull(),
     );
   });
 

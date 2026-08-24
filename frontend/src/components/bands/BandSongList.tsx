@@ -8,6 +8,7 @@ import {
   useUndoBandRehearsalInList,
 } from '../../hooks/bandsongs';
 import {useBandFolders} from '../../hooks/bandfolders';
+import {sortSongsByTitle} from '../../lib/sort';
 
 interface UndoState {
   songId: number;
@@ -44,17 +45,13 @@ export default function BandSongList({
     return () => clearTimeout(timer);
   }, [error]);
 
+  // Folder membership carries no order of its own — every list is alphabetical.
   const folder =
     folderId === null ? null : folders.find(f => f.id === folderId);
-  const visible =
-    folder === null || folder === undefined
-      ? songs
-      : (() => {
-          const byID = new Map(songs.map(s => [s.id, s]));
-          return folder.songIds
-            .map(id => byID.get(id))
-            .filter((s): s is (typeof songs)[number] => s !== undefined);
-        })();
+  const memberIds = folder ? new Set(folder.songIds) : null;
+  const visible = sortSongsByTitle(
+    memberIds ? songs.filter(s => memberIds.has(s.id)) : songs,
+  );
 
   const rehearsed = (songId: number, date: string) => {
     setError(null);
