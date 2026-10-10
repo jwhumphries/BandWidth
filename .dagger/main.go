@@ -130,16 +130,13 @@ func (m *Bandwidth) FormatCheck(
 		Stdout(ctx)
 }
 
-// TestFrontend runs the Vitest suite. Node is installed so the vitest bin's
-// `node` shebang resolves to Node rather than falling back to the Bun
-// runtime, under which jsdom >= 30.1 fails to set up its window.
+// TestFrontend runs the Vitest suite.
 func (m *Bandwidth) TestFrontend(
 	ctx context.Context,
 	// +ignore=["**/node_modules", "frontend/dist", "tmp", "bin", "data", ".git"]
 	source *dagger.Directory,
 ) (string, error) {
 	return m.bunBase(source.Directory("frontend")).
-		WithExec([]string{"apk", "add", "--no-cache", "nodejs"}).
 		WithExec([]string{"bun", "run", "test"}).
 		Stdout(ctx)
 }
