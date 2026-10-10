@@ -153,7 +153,7 @@ Deviations:
 - Repository tests run against in-memory SQLite (`repository.Open(":memory:")`,
   fresh DB per test). Handler tests register routes directly on a bare
   `echo.New()` (no CSRF) via helpers in `internal/handlers/auth_test.go`.
-- Frontend: Vitest + Testing Library (jsdom); setup in
+- Frontend: Vitest + Testing Library (happy-dom); setup in
   `frontend/src/test/setup.ts`.
 
 ## Echo v5 notes
