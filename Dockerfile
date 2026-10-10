@@ -1,9 +1,9 @@
-FROM golang:1.27-alpine@sha256:8a5910f31396cd4d89662f56c68b3ae31d374308270a1c3bd96672ee5ed43414 AS gobase
+FROM golang:1.27-alpine@sha256:738d1cf061836894ff6bb8c33881080ac66de8cf0586615012a0c8f592649cfa AS gobase
 
 RUN apk add --no-cache git
 RUN go install github.com/air-verse/air@latest
 
-FROM ghcr.io/jwhumphries/frontend:latest@sha256:e42a64ad2da5fce40cde0f21e6fdc3deb6ff278fd31dbfc670bd9ee7bcaf6e2f AS dev
+FROM ghcr.io/jwhumphries/frontend:latest@sha256:d8923d9071c21dd38e76b297f3afe50f400d2d177413500747374bafb3c89548 AS dev
 
 WORKDIR /app
 
