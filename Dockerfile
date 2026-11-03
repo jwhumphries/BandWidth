@@ -3,7 +3,7 @@ FROM golang:1.27-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac
 RUN apk add --no-cache git
 RUN go install github.com/air-verse/air@latest
 
-FROM ghcr.io/jwhumphries/frontend:latest@sha256:d8923d9071c21dd38e76b297f3afe50f400d2d177413500747374bafb3c89548 AS dev
+FROM ghcr.io/jwhumphries/frontend:latest@sha256:ac05f1efcf6ad16ad8da4109c99639d4497362f85c434e40d0e7f4e274805b9b AS dev
 
 WORKDIR /app
 
